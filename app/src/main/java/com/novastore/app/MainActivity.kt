@@ -16,7 +16,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
+import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.detail.DetailScreen
+import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
 import com.novastore.app.ui.settings.SettingsScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
@@ -27,18 +29,42 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             NovaStoreTheme {
-                val scope = rememberCoroutineScope()
                 val prefs = remember { Preferences(applicationContext) }
+                var language by remember { mutableStateOf("ru") }
+                var loaded by remember { mutableStateOf(false) }
+                var showWarning by remember { mutableStateOf(false) }
+                var pendingLang by remember { mutableStateOf<String?>(null) }
+                val scope = rememberCoroutineScope()
 
                 LaunchedEffect(Unit) {
-                    val token = prefs.getGithubToken()
-                    GitHubApi.token = token
+                    language = prefs.getLanguage()
+                    GitHubApi.token = prefs.getGithubToken()
+                    loaded = true
+                }
+
+                if (!loaded) return@setContent
+
+                if (showWarning && pendingLang != null) {
+                    WarningScreen(
+                        language = pendingLang!!,
+                        onAccept = {
+                            val lang = pendingLang!!
+                            scope.launch {
+                                prefs.setLanguage(lang)
+                                prefs.setWarningShown()
+                                language = lang
+                                showWarning = false
+                                pendingLang = null
+                            }
+                        }
+                    )
+                    return@setContent
                 }
 
                 val navController = rememberNavController()
                 val items = listOf(
-                    "main" to Icons.Filled.Apps,
-                    "settings" to Icons.Filled.Settings
+                    Triple("main", "tab_catalog", Icons.Filled.Apps),
+                    Triple("settings", "tab_settings", Icons.Filled.Settings)
                 )
 
                 Scaffold(
@@ -46,7 +72,7 @@ class MainActivity : ComponentActivity() {
                         NavigationBar {
                             val backStack by navController.currentBackStackEntryAsState()
                             val route = backStack?.destination?.route
-                            items.forEach { (r, icon) ->
+                            items.forEach { (r, labelKey, icon) ->
                                 NavigationBarItem(
                                     selected = route == r,
                                     onClick = {
@@ -56,7 +82,8 @@ class MainActivity : ComponentActivity() {
                                             restoreState = true
                                         }
                                     },
-                                    icon = { Icon(icon, null) }
+                                    icon = { Icon(icon, null) },
+                                    label = { Text(Strings.get(language, labelKey)) }
                                 )
                             }
                         }
@@ -68,14 +95,36 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(padding)
                     ) {
                         composable("main") {
-                            MainScreen(onAppClick = { pkg ->
-                                navController.navigate("detail/$pkg")
-                            })
+                            MainScreen(
+                                language = language,
+                                onAppClick = { pkg ->
+                                    navController.navigate("detail/$pkg")
+                                }
+                            )
                         }
-                        composable("settings") { SettingsScreen() }
+                        composable("settings") {
+                            SettingsScreen(
+                                language = language,
+                                onLanguageChange = { lang ->
+                                    scope.launch {
+                                        if (lang != "ru" && !prefs.wasWarningShown()) {
+                                            pendingLang = lang
+                                            showWarning = true
+                                        } else {
+                                            prefs.setLanguage(lang)
+                                            language = lang
+                                        }
+                                    }
+                                }
+                            )
+                        }
                         composable("detail/{pkg}") { back ->
                             val pkg = back.arguments?.getString("pkg") ?: ""
-                            DetailScreen(packageName = pkg, onBack = { navController.popBackStack() })
+                            DetailScreen(
+                                packageName = pkg,
+                                language = language,
+                                onBack = { navController.popBackStack() }
+                            )
                         }
                     }
                 }
