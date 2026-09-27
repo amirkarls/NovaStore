@@ -37,6 +37,8 @@ class MainActivity : ComponentActivity() {
             var pendingLang by remember { mutableStateOf<String?>(null) }
             var dynamicColor by remember { mutableStateOf(true) }
             var accentIndex by remember { mutableStateOf(0) }
+            var smoothAnimations by remember { mutableStateOf(true) }
+            var updateNotifications by remember { mutableStateOf(true) }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(Unit) {
@@ -44,6 +46,8 @@ class MainActivity : ComponentActivity() {
                 languageSelected = prefs.isLanguageSelected()
                 dynamicColor = prefs.getDynamicColor()
                 accentIndex = prefs.getAccentColor()
+                smoothAnimations = prefs.getSmoothAnimations()
+                updateNotifications = prefs.getUpdateNotifications()
                 GitHubApi.token = prefs.getGithubToken()
                 loaded = true
             }
@@ -123,15 +127,21 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(padding)
                             ) {
                                 composable("main") {
-                                    MainScreen(language = language) { pkg ->
-                                        navController.navigate("detail/$pkg")
-                                    }
+                                    MainScreen(
+                                        language = language,
+                                        updateNotifications = updateNotifications,
+                                        onAppClick = { pkg ->
+                                            navController.navigate("detail/$pkg")
+                                        }
+                                    )
                                 }
                                 composable("settings") {
                                     SettingsScreen(
                                         language = language,
                                         dynamicColor = dynamicColor,
                                         accentIndex = accentIndex,
+                                        smoothAnimations = smoothAnimations,
+                                        updateNotifications = updateNotifications,
                                         onLanguageChange = { lang ->
                                             scope.launch {
                                                 if (Strings.needsWarning(lang)) {
@@ -153,6 +163,18 @@ class MainActivity : ComponentActivity() {
                                             scope.launch {
                                                 prefs.setAccentColor(index)
                                                 accentIndex = index
+                                            }
+                                        },
+                                        onSmoothAnimationsChange = { value ->
+                                            scope.launch {
+                                                prefs.setSmoothAnimations(value)
+                                                smoothAnimations = value
+                                            }
+                                        },
+                                        onUpdateNotificationsChange = { value ->
+                                            scope.launch {
+                                                prefs.setUpdateNotifications(value)
+                                                updateNotifications = value
                                             }
                                         }
                                     )

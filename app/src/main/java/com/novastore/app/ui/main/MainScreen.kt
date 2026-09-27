@@ -20,6 +20,7 @@ import com.novastore.app.BuildConfig
 import com.novastore.app.data.AppInfo
 import com.novastore.app.data.Catalog
 import com.novastore.app.data.UpdateChecker
+import com.novastore.app.data.categoryLabel
 import com.novastore.app.i18n.Strings
 import com.novastore.app.util.AppIcon
 
@@ -27,6 +28,7 @@ import com.novastore.app.util.AppIcon
 @Composable
 fun MainScreen(
     language: String,
+    updateNotifications: Boolean,
     onAppClick: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -36,9 +38,11 @@ fun MainScreen(
     var dismissed by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val latest = UpdateChecker.checkLatestVersion("amirkarls/NovaStore")
-        if (latest != null && latest.version != BuildConfig.VERSION_NAME) {
-            updateAvailable = latest
+        if (updateNotifications) {
+            val latest = UpdateChecker.checkLatestVersion("amirkarls/NovaStore")
+            if (latest != null && latest.version != BuildConfig.VERSION_NAME) {
+                updateAvailable = latest
+            }
         }
     }
 
@@ -65,7 +69,7 @@ fun MainScreen(
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            if (updateAvailable != null && !dismissed) {
+            if (updateNotifications && updateAvailable != null && !dismissed) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -145,23 +149,6 @@ fun MainScreen(
     }
 }
 
-fun categoryLabel(lang: String, cat: String): String = when (cat) {
-    "all" -> Strings.get(lang, "cat_all")
-    "Shizuku" -> "Shizuku"
-    "Games" -> Strings.get(lang, "cat_games")
-    "Media" -> Strings.get(lang, "cat_media")
-    "Security" -> Strings.get(lang, "cat_security")
-    "Development" -> Strings.get(lang, "cat_dev")
-    "Stores" -> Strings.get(lang, "cat_stores")
-    "Communication" -> Strings.get(lang, "cat_comm")
-    "Navigation" -> Strings.get(lang, "cat_nav")
-    "Tools" -> Strings.get(lang, "cat_tools")
-    "Browsers" -> Strings.get(lang, "cat_browsers")
-    "Education" -> Strings.get(lang, "cat_edu")
-    "Productivity" -> Strings.get(lang, "cat_prod")
-    else -> cat
-}
-
 @Composable
 fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
     Card(
@@ -184,6 +171,13 @@ fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (app.author.isNotBlank()) {
+                    Text(
+                        "${Strings.get(language, "author")}: ${app.author}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
                     categoryLabel(language, app.category),
                     style = MaterialTheme.typography.labelSmall,
