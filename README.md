@@ -49,7 +49,3 @@ APK is built automatically via **GitHub Actions** on every push to `main`.
 ## License
 
 This project is open-source. Use it, study it, improve it.
-
----
-
-*Made with love and bugs.*
