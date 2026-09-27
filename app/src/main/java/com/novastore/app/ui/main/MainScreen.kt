@@ -31,7 +31,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Все") }
+    var selectedCategory by remember { mutableStateOf("all") }
     var updateAvailable by remember { mutableStateOf<com.novastore.app.data.AppUpdate?>(null) }
     var dismissed by remember { mutableStateOf(false) }
 
@@ -42,12 +42,16 @@ fun MainScreen(
         }
     }
 
+    val categories = listOf(
+        "all", "Shizuku", "Games", "Media", "Security", "Development",
+        "Stores", "Communication", "Navigation", "Tools", "Browsers", "Education", "Productivity"
+    )
+
     val filtered = Catalog.apps.filter { app ->
-        (selectedCategory == "Все" || app.category == selectedCategory) &&
+        (selectedCategory == "all" || app.category == selectedCategory) &&
         (query.isBlank() ||
             app.name.contains(query, true) ||
-            app.descriptionRu.contains(query, true) ||
-            app.description.contains(query, true))
+            app.description(language).contains(query, true))
     }
 
     Scaffold(
@@ -113,11 +117,11 @@ fun MainScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(Catalog.categories) { cat ->
+                items(categories) { cat ->
                     FilterChip(
                         selected = selectedCategory == cat,
                         onClick = { selectedCategory = cat },
-                        label = { Text(cat) }
+                        label = { Text(categoryLabel(language, cat)) }
                     )
                 }
             }
@@ -127,7 +131,7 @@ fun MainScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filtered) { app ->
-                    AppCard(app, onClick = { onAppClick(app.packageName) })
+                    AppCard(app, language, onClick = { onAppClick(app.packageName) })
                 }
                 if (filtered.isEmpty()) {
                     item {
@@ -141,8 +145,25 @@ fun MainScreen(
     }
 }
 
+fun categoryLabel(lang: String, cat: String): String = when (cat) {
+    "all" -> Strings.get(lang, "cat_all")
+    "Shizuku" -> "Shizuku"
+    "Games" -> Strings.get(lang, "cat_games")
+    "Media" -> Strings.get(lang, "cat_media")
+    "Security" -> Strings.get(lang, "cat_security")
+    "Development" -> Strings.get(lang, "cat_dev")
+    "Stores" -> Strings.get(lang, "cat_stores")
+    "Communication" -> Strings.get(lang, "cat_comm")
+    "Navigation" -> Strings.get(lang, "cat_nav")
+    "Tools" -> Strings.get(lang, "cat_tools")
+    "Browsers" -> Strings.get(lang, "cat_browsers")
+    "Education" -> Strings.get(lang, "cat_edu")
+    "Productivity" -> Strings.get(lang, "cat_prod")
+    else -> cat
+}
+
 @Composable
-fun AppCard(app: AppInfo, onClick: () -> Unit) {
+fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -159,12 +180,12 @@ fun AppCard(app: AppInfo, onClick: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(app.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    app.descriptionRu,
+                    app.description(language),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    app.category,
+                    categoryLabel(language, app.category),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )

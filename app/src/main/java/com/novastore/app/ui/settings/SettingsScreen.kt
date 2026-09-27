@@ -226,7 +226,7 @@ fun SettingsScreen(
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text("NovaStore v2.2", style = MaterialTheme.typography.bodyMedium)
+                Text("NovaStore beta 1.5", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     Strings.get(language, "about_text"),

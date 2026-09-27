@@ -24,6 +24,7 @@ import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.data.ReleaseInfo
 import com.novastore.app.i18n.Strings
+import com.novastore.app.ui.main.categoryLabel
 import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.AppIcon
 import com.novastore.app.util.AppUtils
@@ -57,12 +58,10 @@ fun DetailScreen(
         if (app != null) {
             isInstalled = AppUtils.isInstalled(context, app.packageName)
             needsPermission = !ApkInstaller.hasInstallPermission(context)
-
             if (!app.fdroid && app.github != null) {
                 releases = GitHubApi.getReleases(app.github!!)
                 selectedRelease = releases.firstOrNull()
             }
-
             val savedId = prefs.getDownloadId()
             val savedApp = prefs.getDownloadApp()
             if (savedId > 0 && savedApp == app.packageName) {
@@ -137,15 +136,9 @@ fun DetailScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(12.dp))
-            AssistChip(onClick = {}, label = { Text(app.category) })
+            AssistChip(onClick = {}, label = { Text(categoryLabel(language, app.category)) })
             Spacer(Modifier.height(20.dp))
-            Text(app.descriptionRu, style = MaterialTheme.typography.bodyLarge)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                app.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(app.description(language), style = MaterialTheme.typography.bodyLarge)
 
             Spacer(Modifier.height(24.dp))
 
@@ -216,10 +209,7 @@ fun DetailScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text(
-                                "${(progress * 100).toInt()}%",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
                         } else {
                             Button(
                                 onClick = {
