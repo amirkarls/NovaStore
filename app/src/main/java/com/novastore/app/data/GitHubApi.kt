@@ -5,16 +5,28 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import org.json.JSONObject
 
 object GitHubApi {
     private val client = OkHttpClient()
 
+    @Volatile
+    var token: String = ""
+
+    private fun addAuth(builder: Request.Builder): Request.Builder {
+        builder.header("Accept", "application/vnd.github+json")
+        if (token.isNotBlank()) {
+            builder.header("Authorization", "Bearer $token")
+        }
+        return builder
+    }
+
     suspend fun getReleases(repo: String): List<ReleaseInfo> = withContext(Dispatchers.IO) {
         try {
-            val request = Request.Builder()
-                .url("https://api.github.com/repos/$repo/releases?per_page=20")
-                .header("Accept", "application/vnd.github+json")
-                .build()
+            val request = addAuth(
+                Request.Builder()
+                    .url("https://api.github.com/repos/$repo/releases?per_page=20")
+            ).build()
             val response = client.newCall(request).execute()
             val body = response.body?.string() ?: return@withContext emptyList()
             val array = JSONArray(body)
@@ -47,4 +59,14 @@ object GitHubApi {
     }
 
     suspend fun getLatestRelease(repo: String): ReleaseInfo? = getReleases(repo).firstOrNull()
+
+    suspend fun checkToken(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val request = addAuth(Request.Builder().url("https://api.github.com/user")).build()
+            val response = client.newCall(request).execute()
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
