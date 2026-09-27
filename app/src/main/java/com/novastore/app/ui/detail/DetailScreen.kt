@@ -18,8 +18,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.novastore.app.data.Catalog
 import com.novastore.app.data.Downloader
-import com.novastore.app.data.GitHubApi
-import com.novastore.app.data.ReleaseInfo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,16 +26,8 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val app = Catalog.apps.firstOrNull { it.packageName == packageName }
     val scope = rememberCoroutineScope()
-    var release by remember { mutableStateOf<ReleaseInfo?>(null) }
-    var loading by remember { mutableStateOf(true) }
+    var loading by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
-
-    LaunchedEffect(packageName) {
-        if (app != null) {
-            release = GitHubApi.getLatestRelease(app.github)
-        }
-        loading = false
-    }
 
     Scaffold(
         topBar = {
@@ -96,31 +86,27 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             Spacer(Modifier.width(12.dp))
-                            Text("Загрузка...")
+                            Text("Поиск ссылки...")
                         }
-                    } else if (release?.apkUrl != null) {
-                        Text("Версия: ${release!!.version}", style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            "Размер: ${"%.1f".format(release!!.size / 1024.0 / 1024.0)} МБ",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(Modifier.height(12.dp))
+                    } else {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    status = "Получение ссылки..."
-                                    val url = Downloader.resolveApkUrl(app.github) ?: release!!.apkUrl
+                                    loading = true
+                                    status = ""
+                                    val url = Downloader.resolveApkUrl(app)
+                                    loading = false
                                     if (url != null) {
-                                        val fileName = "${app.name}-${release!!.version}.apk"
-                                            .replace(" ", "_")
+                                        val fileName = "${app.name}.apk".replace(" ", "_")
                                         Downloader.enqueue(context, url, fileName)
                                         status = "Скачивание началось — проверь уведомления"
                                     } else {
-                                        status = "Не удалось найти APK"
+                                        status = "Ссылка на APK не найдена"
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !loading
                         ) {
                             Icon(Icons.Filled.Download, null)
                             Spacer(Modifier.width(8.dp))
@@ -130,8 +116,6 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                             Spacer(Modifier.height(8.dp))
                             Text(status, style = MaterialTheme.typography.bodySmall)
                         }
-                    } else {
-                        Text("Релиз не найден на GitHub")
                     }
                 }
             }
