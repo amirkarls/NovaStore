@@ -37,6 +37,7 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
     var status by remember { mutableStateOf("") }
     var isInstalled by remember { mutableStateOf(false) }
     var hasUpdate by remember { mutableStateOf(false) }
+    var downloading by remember { mutableStateOf(false) }
 
     LaunchedEffect(packageName) {
         if (app != null) {
@@ -106,61 +107,39 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                                 Text("Загрузка...")
                             }
                         }
+                        downloading -> {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            Spacer(Modifier.height(8.dp))
+                            Text("Загрузка...", style = MaterialTheme.typography.bodySmall)
+                        }
                         isInstalled && !hasUpdate -> {
-                            Button(
-                                onClick = {},
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = false
-                            ) {
+                            Button(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
                                 Icon(Icons.Filled.Check, null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("Установлено")
-                            }
-                        }
-                        isInstalled && hasUpdate -> {
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        status = "Подготовка..."
-                                        val url = Downloader.resolveApkUrl(app)
-                                        if (url != null) {
-                                            Downloader.enqueue(context, url, "${app.name}.apk".replace(" ", "_"))
-                                            status = "Обновление скачивается..."
-                                        } else {
-                                            status = "Ссылка не найдена"
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Icon(Icons.Filled.Update, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Обновить")
-                            }
-                            if (status.isNotBlank()) {
-                                Spacer(Modifier.height(8.dp))
-                                Text(status, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                         else -> {
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        status = "Подготовка..."
+                                        downloading = true
+                                        status = ""
                                         val url = Downloader.resolveApkUrl(app)
                                         if (url != null) {
                                             Downloader.enqueue(context, url, "${app.name}.apk".replace(" ", "_"))
-                                            status = "Установка началась..."
+                                            status = "Скачивание началось — проверь уведомления"
                                         } else {
                                             status = "Ссылка не найдена"
                                         }
+                                        downloading = false
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Filled.Download, null)
+                                Icon(if (isInstalled) Icons.Filled.Update else Icons.Filled.Download, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Установить")
+                                Text(if (isInstalled) "Обновить" else "Установить")
                             }
                             if (status.isNotBlank()) {
                                 Spacer(Modifier.height(8.dp))

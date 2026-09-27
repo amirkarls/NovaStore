@@ -5,7 +5,7 @@ data class AppInfo(
     val packageName: String,
     val description: String,
     val descriptionRu: String,
-    val github: String?,
+    val github: String? = null,
     val category: String,
     val iconUrl: String,
     val apkUrl: String? = null,
