@@ -24,7 +24,7 @@ import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.data.ReleaseInfo
 import com.novastore.app.i18n.Strings
-import com.novastore.app.ui.main.categoryLabel
+import com.novastore.app.data.categoryLabel
 import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.AppIcon
 import com.novastore.app.util.AppUtils
