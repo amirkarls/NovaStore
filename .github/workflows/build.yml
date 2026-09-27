@@ -16,14 +16,13 @@ jobs:
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/novastore.keystore
+      - name: Verify keystore
+        run: |
+          ls -la ${{ github.workspace }}/novastore.keystore
+          keytool -list -keystore ${{ github.workspace }}/novastore.keystore -storepass novastore123 || true
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build Debug APK
-        env:
-          KEYSTORE_PATH: ${{ github.workspace }}/novastore.keystore
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4

@@ -9,27 +9,24 @@ android {
         applicationId = "com.novastore.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.2"
+        versionCode = 13
+        versionName = "1.3"
     }
     signingConfigs {
-        create("release") {
-            val ksPath = System.getenv("KEYSTORE_PATH")
-            if (!ksPath.isNullOrEmpty()) {
-                storeFile = file(ksPath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
+        create("custom") {
+            storeFile = file("${rootDir}/novastore.keystore")
+            storePassword = "novastore123"
+            keyAlias = "novastore"
+            keyPassword = "novastore123"
         }
     }
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("custom")
         }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("custom")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
