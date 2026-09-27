@@ -4,7 +4,7 @@ data class AppInfo(
     val name: String,
     val packageName: String,
     val description: String,
-    val descriptionRu: String,
+    val descriptionRu: String = "",
     val descriptionUk: String = "",
     val descriptionKk: String = "",
     val descriptionEs: String = "",
@@ -17,8 +17,8 @@ data class AppInfo(
 ) {
     fun description(lang: String): String = when (lang) {
         "ru" -> descriptionRu.ifBlank { description }
-        "uk" -> descriptionUk.ifBlank { descriptionRu.ifBlank { description } }
-        "kk" -> descriptionKk.ifBlank { descriptionRu.ifBlank { description } }
+        "uk" -> descriptionUk.ifBlank { description }
+        "kk" -> descriptionKk.ifBlank { description }
         "es" -> descriptionEs.ifBlank { description }
         else -> description
     }
