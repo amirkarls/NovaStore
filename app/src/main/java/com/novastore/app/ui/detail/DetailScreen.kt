@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.novastore.app.data.Catalog
 import com.novastore.app.data.Downloader
 import com.novastore.app.data.GitHubApi
+import com.novastore.app.data.Preferences
 import com.novastore.app.data.ReleaseInfo
 import com.novastore.app.i18n.Strings
 import com.novastore.app.util.ApkInstaller
@@ -39,6 +40,7 @@ fun DetailScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val prefs = remember { Preferences(context) }
     val app = Catalog.apps.firstOrNull { it.packageName == packageName }
     val scope = rememberCoroutineScope()
     var releases by remember { mutableStateOf<List<ReleaseInfo>>(emptyList()) }
@@ -55,9 +57,17 @@ fun DetailScreen(
         if (app != null) {
             isInstalled = AppUtils.isInstalled(context, app.packageName)
             needsPermission = !ApkInstaller.hasInstallPermission(context)
+
             if (!app.fdroid && app.github != null) {
                 releases = GitHubApi.getReleases(app.github!!)
                 selectedRelease = releases.firstOrNull()
+            }
+
+            val savedId = prefs.getDownloadId()
+            val savedApp = prefs.getDownloadApp()
+            if (savedId > 0 && savedApp == app.packageName) {
+                downloadId = savedId
+                downloading = true
             }
         }
         loading = false
@@ -78,11 +88,13 @@ fun DetailScreen(
                     "NovaStore/${app?.name}.apk".replace(" ", "_")
                 )
                 if (file.exists()) ApkInstaller.installApk(context, file)
+                prefs.clearDownload()
                 break
             }
             if (p.status == DownloadManager.STATUS_FAILED) {
                 downloading = false
                 status = Strings.get(language, "download_failed")
+                prefs.clearDownload()
                 break
             }
             delay(500)
@@ -145,10 +157,7 @@ fun DetailScreen(
                     )
                 ) {
                     Column(Modifier.padding(16.dp)) {
-                        Text(
-                            Strings.get(language, "needs_permission"),
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(Strings.get(language, "needs_permission"), fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
                         Text(
                             Strings.get(language, "needs_permission_desc"),
@@ -172,7 +181,7 @@ fun DetailScreen(
                             Text(Strings.get(language, "loading"))
                         }
                     } else {
-                        if (releases.isNotEmpty()) {
+                        if (releases.isNotEmpty() && !downloading) {
                             Text(Strings.get(language, "version"), style = MaterialTheme.typography.labelMedium)
                             Spacer(Modifier.height(4.dp))
                             var expanded by remember { mutableStateOf(false) }
@@ -222,7 +231,10 @@ fun DetailScreen(
                                             ?: Downloader.resolveApkUrl(app)
                                         if (url != null) {
                                             val fileName = "${app.name}.apk".replace(" ", "_")
-                                            downloadId = DownloadService.enqueue(context, url, fileName)
+                                            val id = DownloadService.enqueue(context, url, fileName)
+                                            downloadId = id
+                                            prefs.setDownloadId(id)
+                                            prefs.setDownloadApp(app.packageName)
                                         } else {
                                             downloading = false
                                             status = Strings.get(language, "link_not_found")
