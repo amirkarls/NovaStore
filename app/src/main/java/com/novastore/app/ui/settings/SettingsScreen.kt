@@ -26,9 +26,13 @@ fun SettingsScreen(
     language: String,
     dynamicColor: Boolean,
     accentIndex: Int,
+    smoothAnimations: Boolean,
+    updateNotifications: Boolean,
     onLanguageChange: (String) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
-    onAccentColorChange: (Int) -> Unit
+    onAccentColorChange: (Int) -> Unit,
+    onSmoothAnimationsChange: (Boolean) -> Unit,
+    onUpdateNotificationsChange: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -72,27 +76,15 @@ fun SettingsScreen(
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text(
-                    Strings.get(language, "appearance"),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text(Strings.get(language, "appearance"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(Strings.get(language, "material_you"), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            Strings.get(language, "colors_from_wallpaper"),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(checked = dynamicColor, onCheckedChange = onDynamicColorChange)
-                }
+                SwitchRow(
+                    title = Strings.get(language, "material_you"),
+                    subtitle = Strings.get(language, "colors_from_wallpaper"),
+                    checked = dynamicColor,
+                    onChange = onDynamicColorChange
+                )
 
                 if (!dynamicColor) {
                     Spacer(Modifier.height(16.dp))
@@ -103,9 +95,7 @@ fun SettingsScreen(
                     Spacer(Modifier.height(8.dp))
                     AccentColors.forEachIndexed { index, color ->
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
@@ -126,6 +116,30 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(12.dp))
+
+                SwitchRow(
+                    title = Strings.get(language, "animations"),
+                    subtitle = Strings.get(language, "animations_desc"),
+                    checked = smoothAnimations,
+                    onChange = onSmoothAnimationsChange
+                )
+            }
+        }
+
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                SwitchRow(
+                    title = Strings.get(language, "update_notifications"),
+                    subtitle = Strings.get(language, "update_notifications_desc"),
+                    checked = updateNotifications,
+                    onChange = onUpdateNotificationsChange
+                )
             }
         }
 
@@ -235,6 +249,30 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 
