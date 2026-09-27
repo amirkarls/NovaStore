@@ -9,8 +9,8 @@ android {
         applicationId = "com.novastore.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 7
+        versionName = "0.7"
     }
     buildTypes {
         release {
@@ -23,7 +23,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
 }
 dependencies {

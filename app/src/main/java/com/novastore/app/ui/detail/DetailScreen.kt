@@ -41,8 +41,8 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
     LaunchedEffect(packageName) {
         if (app != null) {
             isInstalled = AppUtils.isInstalled(context, app.packageName)
-            if (app.apkUrl == null) {
-                release = GitHubApi.getLatestRelease(app.github)
+            if (app.apkUrl == null && !app.fdroid && app.github != null) {
+                release = GitHubApi.getLatestRelease(app.github!!)
             }
             hasUpdate = isInstalled
         }
@@ -171,17 +171,19 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${app.github}"))
-                    context.startActivity(intent)
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Filled.OpenInNew, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Открыть на GitHub")
+            if (app.github != null) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${app.github}"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.OpenInNew, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Открыть на GitHub")
+                }
             }
         }
     }

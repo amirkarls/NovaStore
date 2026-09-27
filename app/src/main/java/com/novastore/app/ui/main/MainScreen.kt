@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +29,7 @@ fun MainScreen(onAppClick: (String) -> Unit) {
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Все") }
     var updateAvailable by remember { mutableStateOf<com.novastore.app.data.AppUpdate?>(null) }
+    var dismissed by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val latest = UpdateChecker.checkLatestVersion("amirkarls/NovaStore")
@@ -56,7 +57,7 @@ fun MainScreen(onAppClick: (String) -> Unit) {
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            updateAvailable?.let { update ->
+            if (updateAvailable != null && !dismissed) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -65,28 +66,32 @@ fun MainScreen(onAppClick: (String) -> Unit) {
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Info, null)
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                "NovaStore обновился",
+                                "Доступно обновление ${updateAvailable!!.version}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                "Доступна версия ${update.version}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
                         }
-                        Button(onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(update.apkUrl))
-                            context.startActivity(intent)
-                        }) {
-                            Icon(Icons.Filled.Download, null)
-                            Spacer(Modifier.width(4.dp))
-                            Text("Скачать")
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Добавлено больше приложений и улучшена работа с F-Droid",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateAvailable!!.apkUrl))
+                                context.startActivity(intent)
+                            }) {
+                                Text("Обновить")
+                            }
+                            TextButton(onClick = { dismissed = true }) {
+                                Text("Позже")
+                            }
                         }
                     }
                 }
