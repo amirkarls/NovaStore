@@ -20,16 +20,16 @@ class Preferences(private val context: Context) {
         val ACCENT_COLOR = intPreferencesKey("accent_color")
         val DOWNLOAD_ID = longPreferencesKey("download_id")
         val DOWNLOAD_APP = stringPreferencesKey("download_app")
+        val SMOOTH_ANIMATIONS = booleanPreferencesKey("smooth_animations")
+        val UPDATE_NOTIFICATIONS = booleanPreferencesKey("update_notifications")
     }
 
-    suspend fun getGithubToken(): String =
-        context.dataStore.data.first()[GITHUB_TOKEN] ?: ""
+    suspend fun getGithubToken(): String = context.dataStore.data.first()[GITHUB_TOKEN] ?: ""
     suspend fun setGithubToken(token: String) {
         context.dataStore.edit { it[GITHUB_TOKEN] = token }
     }
 
-    suspend fun getLanguage(): String =
-        context.dataStore.data.first()[LANGUAGE] ?: "ru"
+    suspend fun getLanguage(): String = context.dataStore.data.first()[LANGUAGE] ?: "ru"
     suspend fun setLanguage(lang: String) {
         context.dataStore.edit { it[LANGUAGE] = lang }
     }
@@ -69,5 +69,17 @@ class Preferences(private val context: Context) {
             it[DOWNLOAD_ID] = -1L
             it[DOWNLOAD_APP] = ""
         }
+    }
+
+    suspend fun getSmoothAnimations(): Boolean =
+        context.dataStore.data.first()[SMOOTH_ANIMATIONS] ?: true
+    suspend fun setSmoothAnimations(value: Boolean) {
+        context.dataStore.edit { it[SMOOTH_ANIMATIONS] = value }
+    }
+
+    suspend fun getUpdateNotifications(): Boolean =
+        context.dataStore.data.first()[UPDATE_NOTIFICATIONS] ?: true
+    suspend fun setUpdateNotifications(value: Boolean) {
+        context.dataStore.edit { it[UPDATE_NOTIFICATIONS] = value }
     }
 }
