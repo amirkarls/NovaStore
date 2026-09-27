@@ -11,15 +11,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun NovaStoreTheme(content: @Composable () -> Unit) {
-    val darkTheme = isSystemInDarkTheme()
+fun NovaStoreTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    accentIndex: Int = 0,
+    content: @Composable () -> Unit
+) {
     val colorScheme = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> darkColorScheme()
-        else -> lightColorScheme()
+        else -> {
+            val accent = AccentColors.getOrElse(accentIndex) { AccentColors[0] }
+            if (darkTheme) {
+                darkColorScheme(primary = accent)
+            } else {
+                lightColorScheme(primary = accent)
+            }
+        }
     }
     MaterialTheme(colorScheme = colorScheme, content = content)
 }

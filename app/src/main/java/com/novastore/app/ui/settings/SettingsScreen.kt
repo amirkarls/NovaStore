@@ -16,13 +16,19 @@ import androidx.compose.ui.unit.dp
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
+import com.novastore.app.ui.theme.AccentColors
+import com.novastore.app.ui.theme.AccentNames
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     language: String,
-    onLanguageChange: (String) -> Unit
+    dynamicColor: Boolean,
+    accentIndex: Int,
+    onLanguageChange: (String) -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit,
+    onAccentColorChange: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -66,6 +72,65 @@ fun SettingsScreen(
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
+                Text(
+                    Strings.get(language, "appearance"),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(Strings.get(language, "material_you"), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            Strings.get(language, "colors_from_wallpaper"),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(checked = dynamicColor, onCheckedChange = onDynamicColorChange)
+                }
+
+                if (!dynamicColor) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        Strings.get(language, "accent_color"),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    AccentColors.forEachIndexed { index, color ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = MaterialTheme.shapes.small,
+                                color = color,
+                                modifier = Modifier.size(36.dp)
+                            ) {}
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                AccentNames.getOrElse(index) { "Color" },
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            RadioButton(
+                                selected = accentIndex == index,
+                                onClick = { onAccentColorChange(index) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "github_token"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -82,13 +147,6 @@ fun SettingsScreen(
                     placeholder = { Text("ghp_...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
-                )
-
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "github.com/settings/tokens (scope: public_repo)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -168,7 +226,7 @@ fun SettingsScreen(
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text("NovaStore v1.9", style = MaterialTheme.typography.bodyMedium)
+                Text("NovaStore v2.2", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     Strings.get(language, "about_text"),

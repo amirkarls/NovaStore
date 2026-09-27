@@ -29,22 +29,29 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NovaStoreTheme {
-                val prefs = remember { Preferences(applicationContext) }
-                var language by remember { mutableStateOf("ru") }
-                var loaded by remember { mutableStateOf(false) }
-                var languageSelected by remember { mutableStateOf(false) }
-                var showWarning by remember { mutableStateOf(false) }
-                var pendingLang by remember { mutableStateOf<String?>(null) }
-                val scope = rememberCoroutineScope()
+            val prefs = remember { Preferences(applicationContext) }
+            var language by remember { mutableStateOf("ru") }
+            var loaded by remember { mutableStateOf(false) }
+            var languageSelected by remember { mutableStateOf(false) }
+            var showWarning by remember { mutableStateOf(false) }
+            var pendingLang by remember { mutableStateOf<String?>(null) }
+            var dynamicColor by remember { mutableStateOf(true) }
+            var accentIndex by remember { mutableStateOf(0) }
+            val scope = rememberCoroutineScope()
 
-                LaunchedEffect(Unit) {
-                    language = prefs.getLanguage()
-                    languageSelected = prefs.isLanguageSelected()
-                    GitHubApi.token = prefs.getGithubToken()
-                    loaded = true
-                }
+            LaunchedEffect(Unit) {
+                language = prefs.getLanguage()
+                languageSelected = prefs.isLanguageSelected()
+                dynamicColor = prefs.getDynamicColor()
+                accentIndex = prefs.getAccentColor()
+                GitHubApi.token = prefs.getGithubToken()
+                loaded = true
+            }
 
+            NovaStoreTheme(
+                dynamicColor = dynamicColor,
+                accentIndex = accentIndex
+            ) {
                 when {
                     !loaded -> {}
 
@@ -121,17 +128,34 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 composable("settings") {
-                                    SettingsScreen(language = language) { lang ->
-                                        scope.launch {
-                                            if (Strings.needsWarning(lang)) {
-                                                pendingLang = lang
-                                                showWarning = true
-                                            } else {
-                                                prefs.setLanguage(lang)
-                                                language = lang
+                                    SettingsScreen(
+                                        language = language,
+                                        dynamicColor = dynamicColor,
+                                        accentIndex = accentIndex,
+                                        onLanguageChange = { lang ->
+                                            scope.launch {
+                                                if (Strings.needsWarning(lang)) {
+                                                    pendingLang = lang
+                                                    showWarning = true
+                                                } else {
+                                                    prefs.setLanguage(lang)
+                                                    language = lang
+                                                }
+                                            }
+                                        },
+                                        onDynamicColorChange = { value ->
+                                            scope.launch {
+                                                prefs.setDynamicColor(value)
+                                                dynamicColor = value
+                                            }
+                                        },
+                                        onAccentColorChange = { index ->
+                                            scope.launch {
+                                                prefs.setAccentColor(index)
+                                                accentIndex = index
                                             }
                                         }
-                                    }
+                                    )
                                 }
                                 composable("detail/{pkg}") { back ->
                                     val pkg = back.arguments?.getString("pkg") ?: ""
