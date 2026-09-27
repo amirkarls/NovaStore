@@ -58,7 +58,8 @@ object Downloader {
         if (app.fdroid) {
             resolveFdroidUrl(app.packageName)?.let { return it }
         }
-        return resolveGitHubUrl(app.github)
+        val repo = app.github ?: return null
+        return resolveGitHubUrl(repo)
     }
 
     fun enqueue(context: Context, url: String, fileName: String): Long {
