@@ -1,5 +1,6 @@
 package com.novastore.app.ui.detail
 
+import android.app.DownloadManager
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.*
@@ -7,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Update
@@ -22,9 +22,13 @@ import com.novastore.app.data.Catalog
 import com.novastore.app.data.Downloader
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.ReleaseInfo
+import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.AppIcon
 import com.novastore.app.util.AppUtils
+import com.novastore.app.util.DownloadService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,22 +36,54 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val app = Catalog.apps.firstOrNull { it.packageName == packageName }
     val scope = rememberCoroutineScope()
-    var release by remember { mutableStateOf<ReleaseInfo?>(null) }
+    var releases by remember { mutableStateOf<List<ReleaseInfo>>(emptyList()) }
+    var selectedRelease by remember { mutableStateOf<ReleaseInfo?>(null) }
     var loading by remember { mutableStateOf(true) }
     var status by remember { mutableStateOf("") }
     var isInstalled by remember { mutableStateOf(false) }
-    var hasUpdate by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0f) }
     var downloading by remember { mutableStateOf(false) }
+    var downloadId by remember { mutableStateOf<Long?>(null) }
+    var needsPermission by remember { mutableStateOf(false) }
 
     LaunchedEffect(packageName) {
         if (app != null) {
             isInstalled = AppUtils.isInstalled(context, app.packageName)
-            if (app.apkUrl == null && !app.fdroid && app.github != null) {
-                release = GitHubApi.getLatestRelease(app.github!!)
+            needsPermission = !ApkInstaller.hasInstallPermission(context)
+            if (!app.fdroid && app.github != null) {
+                releases = GitHubApi.getReleases(app.github!!)
+                selectedRelease = releases.firstOrNull()
             }
-            hasUpdate = isInstalled
         }
         loading = false
+    }
+
+    LaunchedEffect(downloadId) {
+        val id = downloadId ?: return@LaunchedEffect
+        while (true) {
+            val p = DownloadService.getProgress(context, id)
+            progress = p.percent
+            if (p.status == DownloadManager.STATUS_SUCCESSFUL) {
+                downloading = false
+                status = "Загрузка завершена — открываю установщик"
+                val file = File(
+                    android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOWNLOADS
+                    ),
+                    "NovaStore/${app?.name}.apk".replace(" ", "_")
+                )
+                if (file.exists()) {
+                    ApkInstaller.installApk(context, file)
+                }
+                break
+            }
+            if (p.status == DownloadManager.STATUS_FAILED) {
+                downloading = false
+                status = "Ошибка загрузки"
+                break
+            }
+            delay(500)
+        }
     }
 
     Scaffold(
@@ -97,42 +133,91 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
             )
 
             Spacer(Modifier.height(24.dp))
+
+            if (needsPermission) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Нужно разрешение на установку", fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Разреши установку APK из NovaStore в настройках",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { ApkInstaller.requestInstallPermission(context) }) {
+                            Text("Разрешить")
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    when {
-                        loading -> {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                Spacer(Modifier.width(12.dp))
-                                Text("Загрузка...")
-                            }
+                    if (loading) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.width(12.dp))
+                            Text("Загрузка...")
                         }
-                        downloading -> {
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    } else {
+                        if (releases.isNotEmpty()) {
+                            Text("Версия", style = MaterialTheme.typography.labelMedium)
+                            Spacer(Modifier.height(4.dp))
+                            var expanded by remember { mutableStateOf(false) }
+                            Box {
+                                OutlinedButton(
+                                    onClick = { expanded = true },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(selectedRelease?.version ?: "—")
+                                }
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    releases.forEach { rel ->
+                                        DropdownMenuItem(
+                                            text = { Text(rel.version) },
+                                            onClick = {
+                                                selectedRelease = rel
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        if (downloading) {
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.fillMaxWidth()
+                            )
                             Spacer(Modifier.height(8.dp))
-                            Text("Загрузка...", style = MaterialTheme.typography.bodySmall)
-                        }
-                        isInstalled && !hasUpdate -> {
-                            Button(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
-                                Icon(Icons.Filled.Check, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Установлено")
-                            }
-                        }
-                        else -> {
+                            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                        } else {
                             Button(
                                 onClick = {
                                     scope.launch {
                                         downloading = true
+                                        progress = 0f
                                         status = ""
-                                        val url = Downloader.resolveApkUrl(app)
+                                        val url = selectedRelease?.apkUrl
+                                            ?: Downloader.resolveApkUrl(app)
                                         if (url != null) {
-                                            Downloader.enqueue(context, url, "${app.name}.apk".replace(" ", "_"))
-                                            status = "Скачивание началось — проверь уведомления"
+                                            val fileName = "${app.name}.apk".replace(" ", "_")
+                                            downloadId = DownloadService.enqueue(context, url, fileName)
                                         } else {
+                                            downloading = false
                                             status = "Ссылка не найдена"
                                         }
-                                        downloading = false
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth()
@@ -141,10 +226,11 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                                 Spacer(Modifier.width(8.dp))
                                 Text(if (isInstalled) "Обновить" else "Установить")
                             }
-                            if (status.isNotBlank()) {
-                                Spacer(Modifier.height(8.dp))
-                                Text(status, style = MaterialTheme.typography.bodySmall)
-                            }
+                        }
+
+                        if (status.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(status, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

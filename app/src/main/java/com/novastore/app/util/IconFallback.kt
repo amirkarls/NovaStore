@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,34 +22,21 @@ fun AppIcon(name: String, url: String, size: Int = 56) {
         model = url,
         contentDescription = name,
         modifier = Modifier.size(size.dp),
-        loading = {
-            Box(Modifier.size(size.dp))
-        },
-        error = {
-            FallbackIcon(name, size)
-        },
-        success = {
-            SubcomposeAsyncImageContent()
-        }
+        loading = { Box(Modifier.size(size.dp)) },
+        error = { FallbackIcon(name, size) },
+        success = { SubcomposeAsyncImageContent() }
     )
 }
 
 @Composable
 fun FallbackIcon(name: String, size: Int) {
     val colors = listOf(
-        Color(0xFF6650a4),
-        Color(0xFF00696E),
-        Color(0xFF8B5000),
-        Color(0xFF984061),
-        Color(0xFF3F683B),
-        Color(0xFF3D5F90)
+        Color(0xFF6650a4), Color(0xFF00696E), Color(0xFF8B5000),
+        Color(0xFF984061), Color(0xFF3F683B), Color(0xFF3D5F90)
     )
     val color = colors[name.hashCode().mod(colors.size)]
     Box(
-        modifier = Modifier
-            .size(size.dp)
-            .clip(CircleShape)
-            .background(color),
+        modifier = Modifier.size(size.dp).clip(CircleShape).background(color),
         contentAlignment = Alignment.Center
     ) {
         Text(
