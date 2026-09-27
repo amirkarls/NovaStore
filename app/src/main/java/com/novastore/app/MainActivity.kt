@@ -18,6 +18,7 @@ import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.detail.DetailScreen
+import com.novastore.app.ui.language.LanguageScreen
 import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
 import com.novastore.app.ui.settings.SettingsScreen
@@ -32,18 +33,37 @@ class MainActivity : ComponentActivity() {
                 val prefs = remember { Preferences(applicationContext) }
                 var language by remember { mutableStateOf("ru") }
                 var loaded by remember { mutableStateOf(false) }
+                var languageSelected by remember { mutableStateOf(false) }
                 var showWarning by remember { mutableStateOf(false) }
                 var pendingLang by remember { mutableStateOf<String?>(null) }
                 val scope = rememberCoroutineScope()
 
                 LaunchedEffect(Unit) {
                     language = prefs.getLanguage()
+                    languageSelected = prefs.isLanguageSelected()
                     GitHubApi.token = prefs.getGithubToken()
                     loaded = true
                 }
 
                 when {
                     !loaded -> {}
+
+                    !languageSelected -> {
+                        LanguageScreen(onSelected = { lang ->
+                            scope.launch {
+                                if (Strings.needsWarning(lang)) {
+                                    pendingLang = lang
+                                    showWarning = true
+                                } else {
+                                    prefs.setLanguage(lang)
+                                    prefs.setLanguageSelected()
+                                    language = lang
+                                    languageSelected = true
+                                }
+                            }
+                        })
+                    }
+
                     showWarning && pendingLang != null -> {
                         WarningScreen(
                             language = pendingLang!!,
@@ -51,13 +71,16 @@ class MainActivity : ComponentActivity() {
                                 val lang = pendingLang!!
                                 scope.launch {
                                     prefs.setLanguage(lang)
+                                    prefs.setLanguageSelected()
                                     language = lang
+                                    languageSelected = true
                                     showWarning = false
                                     pendingLang = null
                                 }
                             }
                         )
                     }
+
                     else -> {
                         val navController = rememberNavController()
                         val items = listOf(
@@ -93,28 +116,22 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(padding)
                             ) {
                                 composable("main") {
-                                    MainScreen(
-                                        language = language,
-                                        onAppClick = { pkg ->
-                                            navController.navigate("detail/$pkg")
-                                        }
-                                    )
+                                    MainScreen(language = language) { pkg ->
+                                        navController.navigate("detail/$pkg")
+                                    }
                                 }
                                 composable("settings") {
-                                    SettingsScreen(
-                                        language = language,
-                                        onLanguageChange = { lang ->
-                                            scope.launch {
-                                                if (Strings.needsWarning(lang)) {
-                                                    pendingLang = lang
-                                                    showWarning = true
-                                                } else {
-                                                    prefs.setLanguage(lang)
-                                                    language = lang
-                                                }
+                                    SettingsScreen(language = language) { lang ->
+                                        scope.launch {
+                                            if (Strings.needsWarning(lang)) {
+                                                pendingLang = lang
+                                                showWarning = true
+                                            } else {
+                                                prefs.setLanguage(lang)
+                                                language = lang
                                             }
                                         }
-                                    )
+                                    }
                                 }
                                 composable("detail/{pkg}") { back ->
                                     val pkg = back.arguments?.getString("pkg") ?: ""

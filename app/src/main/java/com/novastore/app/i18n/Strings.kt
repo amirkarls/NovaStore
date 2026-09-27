@@ -45,7 +45,25 @@ object Strings {
         "category" to "Категория",
         "warning_title" to "Внимание!",
         "warning_text" to "Этот язык был переведён машинным переводом, поэтому может содержать ошибки.",
-        "warning_ok" to "Понятно"
+        "warning_ok" to "Понятно",
+        "select_language" to "Выберите язык",
+        "appearance" to "Внешний вид",
+        "material_you" to "Material You",
+        "colors_from_wallpaper" to "Цвета из обоев",
+        "accent_color" to "Акцентный цвет",
+        "cat_all" to "Все",
+        "cat_shizuku" to "Shizuku",
+        "cat_games" to "Игры",
+        "cat_media" to "Медиа",
+        "cat_security" to "Безопасность",
+        "cat_dev" to "Разработка",
+        "cat_stores" to "Магазины",
+        "cat_comm" to "Связь",
+        "cat_nav" to "Навигация",
+        "cat_tools" to "Утилиты",
+        "cat_browsers" to "Браузеры",
+        "cat_edu" to "Обучение",
+        "cat_prod" to "Продуктивность"
     )
 
     private val en = mapOf(
@@ -92,7 +110,25 @@ object Strings {
         "category" to "Category",
         "warning_title" to "Attention!",
         "warning_text" to "This language was translated by machine translation, so it may contain errors.",
-        "warning_ok" to "Got it"
+        "warning_ok" to "Got it",
+        "select_language" to "Select your language",
+        "appearance" to "Appearance",
+        "material_you" to "Material You",
+        "colors_from_wallpaper" to "Colors from wallpaper",
+        "accent_color" to "Accent color",
+        "cat_all" to "All",
+        "cat_shizuku" to "Shizuku",
+        "cat_games" to "Games",
+        "cat_media" to "Media",
+        "cat_security" to "Security",
+        "cat_dev" to "Development",
+        "cat_stores" to "Stores",
+        "cat_comm" to "Communication",
+        "cat_nav" to "Navigation",
+        "cat_tools" to "Tools",
+        "cat_browsers" to "Browsers",
+        "cat_edu" to "Education",
+        "cat_prod" to "Productivity"
     )
 
     private val uk = mapOf(
@@ -139,7 +175,25 @@ object Strings {
         "category" to "Категорія",
         "warning_title" to "Увага!",
         "warning_text" to "Ця мова була перекладена машинним перекладом, тому може містити помилки.",
-        "warning_ok" to "Зрозуміло"
+        "warning_ok" to "Зрозуміло",
+        "select_language" to "Виберіть мову",
+        "appearance" to "Зовнішній вигляд",
+        "material_you" to "Material You",
+        "colors_from_wallpaper" to "Кольори з шпалер",
+        "accent_color" to "Акцентний колір",
+        "cat_all" to "Усі",
+        "cat_shizuku" to "Shizuku",
+        "cat_games" to "Ігри",
+        "cat_media" to "Медіа",
+        "cat_security" to "Безпека",
+        "cat_dev" to "Розробка",
+        "cat_stores" to "Магазини",
+        "cat_comm" to "Зв'язок",
+        "cat_nav" to "Навігація",
+        "cat_tools" to "Утиліти",
+        "cat_browsers" to "Браузери",
+        "cat_edu" to "Навчання",
+        "cat_prod" to "Продуктивність"
     )
 
     private val kk = mapOf(
@@ -186,7 +240,25 @@ object Strings {
         "category" to "Санат",
         "warning_title" to "Назар аударыңыз!",
         "warning_text" to "Бұл тіл машиналық аудармамен аударылды, сондықтан қателер болуы мүмкін.",
-        "warning_ok" to "Түсінікті"
+        "warning_ok" to "Түсінікті",
+        "select_language" to "Тілді таңдаңыз",
+        "appearance" to "Сыртқы түрі",
+        "material_you" to "Material You",
+        "colors_from_wallpaper" to "Тұсқағаздан алынған түстер",
+        "accent_color" to "Акцент түсі",
+        "cat_all" to "Барлығы",
+        "cat_shizuku" to "Shizuku",
+        "cat_games" to "Ойындар",
+        "cat_media" to "Медиа",
+        "cat_security" to "Қауіпсіздік",
+        "cat_dev" to "Әзірлеу",
+        "cat_stores" to "Дүкендер",
+        "cat_comm" to "Байланыс",
+        "cat_nav" to "Навигация",
+        "cat_tools" to "Құралдар",
+        "cat_browsers" to "Браузерлер",
+        "cat_edu" to "Оқу",
+        "cat_prod" to "Өнімділік"
     )
 
     private val es = mapOf(
@@ -233,7 +305,25 @@ object Strings {
         "category" to "Categoría",
         "warning_title" to "¡Atención!",
         "warning_text" to "Este idioma fue traducido por traducción automática, por lo que puede contener errores.",
-        "warning_ok" to "Entendido"
+        "warning_ok" to "Entendido",
+        "select_language" to "Selecciona tu idioma",
+        "appearance" to "Apariencia",
+        "material_you" to "Material You",
+        "colors_from_wallpaper" to "Colores del fondo",
+        "accent_color" to "Color de acento",
+        "cat_all" to "Todas",
+        "cat_shizuku" to "Shizuku",
+        "cat_games" to "Juegos",
+        "cat_media" to "Multimedia",
+        "cat_security" to "Seguridad",
+        "cat_dev" to "Desarrollo",
+        "cat_stores" to "Tiendas",
+        "cat_comm" to "Comunicación",
+        "cat_nav" to "Navegación",
+        "cat_tools" to "Herramientas",
+        "cat_browsers" to "Navegadores",
+        "cat_edu" to "Educación",
+        "cat_prod" to "Productividad"
     )
 
     fun get(lang: String, key: String): String {
