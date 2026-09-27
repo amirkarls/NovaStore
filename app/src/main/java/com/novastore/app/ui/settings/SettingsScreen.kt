@@ -10,16 +10,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
+import com.novastore.app.i18n.Strings
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    language: String,
+    onLanguageChange: (String) -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val prefs = remember { Preferences(context) }
@@ -43,17 +47,29 @@ fun SettingsScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            "Настройки",
+            Strings.get(language, "settings"),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text("GitHub", style = MaterialTheme.typography.titleMedium)
+                Text("Язык / Language", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                LangRow("Русский", "ru", language, onLanguageChange)
+                LangRow("English", "en", language, onLanguageChange)
+                LangRow("Українська", "uk", language, onLanguageChange)
+                LangRow("Қазақша", "kk", language, onLanguageChange)
+                LangRow("Español", "es", language, onLanguageChange)
+            }
+        }
+
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(Strings.get(language, "github_token"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Токен нужен для доступа к API GitHub. Без него лимит 60 запросов в час. С токеном — 5000.",
+                    Strings.get(language, "github_token_desc"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -62,7 +78,7 @@ fun SettingsScreen() {
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
-                    label = { Text("Personal Access Token") },
+                    label = { Text(Strings.get(language, "github_token_hint")) },
                     placeholder = { Text("ghp_...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -70,39 +86,40 @@ fun SettingsScreen() {
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Создать токен: github.com/settings/tokens (scope: public_repo)",
+                    "github.com/settings/tokens (scope: public_repo)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                prefs.setGithubToken(token)
-                                GitHubApi.token = token
-                                savedToken = token
-                                status = if (token.isBlank()) "Токен удалён" else "Токен сохранён"
-                            }
+                    Button(onClick = {
+                        scope.launch {
+                            prefs.setGithubToken(token)
+                            GitHubApi.token = token
+                            savedToken = token
+                            status = if (token.isBlank())
+                                Strings.get(language, "token_removed")
+                            else Strings.get(language, "token_saved")
                         }
-                    ) {
-                        Text("Сохранить")
+                    }) {
+                        Text(Strings.get(language, "save"))
                     }
                     OutlinedButton(
                         onClick = {
                             scope.launch {
                                 checking = true
-                                status = "Проверка..."
+                                status = Strings.get(language, "checking")
                                 GitHubApi.token = token
                                 val ok = GitHubApi.checkToken()
-                                status = if (ok) "Токен работает" else "Токен не работает"
+                                status = if (ok) Strings.get(language, "token_works")
+                                else Strings.get(language, "token_not_works")
                                 checking = false
                             }
                         },
                         enabled = !checking && token.isNotBlank()
                     ) {
-                        Text("Проверить")
+                        Text(Strings.get(language, "check"))
                     }
                     if (token.isNotBlank()) {
                         TextButton(onClick = {
@@ -111,10 +128,10 @@ fun SettingsScreen() {
                                 prefs.setGithubToken("")
                                 GitHubApi.token = ""
                                 savedToken = ""
-                                status = "Токен удалён"
+                                status = Strings.get(language, "token_removed")
                             }
                         }) {
-                            Text("Очистить")
+                            Text(Strings.get(language, "clear"))
                         }
                     }
                 }
@@ -123,9 +140,11 @@ fun SettingsScreen() {
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            if (status.contains("работает")) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                            if (status == Strings.get(language, "token_works"))
+                                Icons.Filled.CheckCircle
+                            else Icons.Filled.Error,
                             null,
-                            tint = if (status.contains("работает"))
+                            tint = if (status == Strings.get(language, "token_works"))
                                 MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.error
                         )
@@ -137,7 +156,7 @@ fun SettingsScreen() {
                 if (savedToken.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Сохранён токен: ${savedToken.take(7)}...${savedToken.takeLast(4)}",
+                        "${savedToken.take(7)}...${savedToken.takeLast(4)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -147,16 +166,28 @@ fun SettingsScreen() {
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text("О приложении", style = MaterialTheme.typography.titleMedium)
+                Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text("NovaStore v1.1", style = MaterialTheme.typography.bodyMedium)
+                Text("NovaStore v1.9", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Магазин open-source приложений с прямыми ссылками из F-Droid и GitHub.",
+                    Strings.get(language, "about_text"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+    }
+}
+
+@Composable
+fun LangRow(title: String, code: String, current: String, onChange: (String) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        RadioButton(selected = current == code, onClick = { onChange(code) })
     }
 }

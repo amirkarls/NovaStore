@@ -20,11 +20,15 @@ import com.novastore.app.BuildConfig
 import com.novastore.app.data.AppInfo
 import com.novastore.app.data.Catalog
 import com.novastore.app.data.UpdateChecker
+import com.novastore.app.i18n.Strings
 import com.novastore.app.util.AppIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(onAppClick: (String) -> Unit) {
+fun MainScreen(
+    language: String,
+    onAppClick: (String) -> Unit
+) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Все") }
@@ -49,7 +53,7 @@ fun MainScreen(onAppClick: (String) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("NovaStore", fontWeight = FontWeight.Bold) },
+                title = { Text(Strings.get(language, "app_name"), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -71,14 +75,14 @@ fun MainScreen(onAppClick: (String) -> Unit) {
                             Icon(Icons.Filled.Info, null)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Доступно обновление ${updateAvailable!!.version}",
+                                "${Strings.get(language, "update_available")} ${updateAvailable!!.version}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Добавлено больше приложений и улучшена работа с F-Droid",
+                            Strings.get(language, "update_text"),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Spacer(Modifier.height(12.dp))
@@ -87,10 +91,10 @@ fun MainScreen(onAppClick: (String) -> Unit) {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateAvailable!!.apkUrl))
                                 context.startActivity(intent)
                             }) {
-                                Text("Обновить")
+                                Text(Strings.get(language, "update_button"))
                             }
                             TextButton(onClick = { dismissed = true }) {
-                                Text("Позже")
+                                Text(Strings.get(language, "later"))
                             }
                         }
                     }
@@ -100,7 +104,7 @@ fun MainScreen(onAppClick: (String) -> Unit) {
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = { Text("Поиск приложений") },
+                placeholder = { Text(Strings.get(language, "search_hint")) },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 singleLine = true
@@ -128,7 +132,7 @@ fun MainScreen(onAppClick: (String) -> Unit) {
                 if (filtered.isEmpty()) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text("Ничего не найдено", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(Strings.get(language, "nothing_found"), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

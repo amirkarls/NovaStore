@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +22,7 @@ import com.novastore.app.data.Catalog
 import com.novastore.app.data.Downloader
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.ReleaseInfo
+import com.novastore.app.i18n.Strings
 import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.AppIcon
 import com.novastore.app.util.AppUtils
@@ -32,7 +33,11 @@ import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(packageName: String, onBack: () -> Unit) {
+fun DetailScreen(
+    packageName: String,
+    language: String,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     val app = Catalog.apps.firstOrNull { it.packageName == packageName }
     val scope = rememberCoroutineScope()
@@ -65,21 +70,19 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
             progress = p.percent
             if (p.status == DownloadManager.STATUS_SUCCESSFUL) {
                 downloading = false
-                status = "Загрузка завершена — открываю установщик"
+                status = Strings.get(language, "download_finished")
                 val file = File(
                     android.os.Environment.getExternalStoragePublicDirectory(
                         android.os.Environment.DIRECTORY_DOWNLOADS
                     ),
                     "NovaStore/${app?.name}.apk".replace(" ", "_")
                 )
-                if (file.exists()) {
-                    ApkInstaller.installApk(context, file)
-                }
+                if (file.exists()) ApkInstaller.installApk(context, file)
                 break
             }
             if (p.status == DownloadManager.STATUS_FAILED) {
                 downloading = false
-                status = "Ошибка загрузки"
+                status = Strings.get(language, "download_failed")
                 break
             }
             delay(500)
@@ -92,7 +95,7 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                 title = { Text(app?.name ?: "—") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 }
             )
@@ -100,7 +103,7 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
     ) { padding ->
         if (app == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Приложение не найдено")
+                Text(Strings.get(language, "app_not_found"))
             }
             return@Scaffold
         }
@@ -142,15 +145,18 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                     )
                 ) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Нужно разрешение на установку", fontWeight = FontWeight.Bold)
+                        Text(
+                            Strings.get(language, "needs_permission"),
+                            fontWeight = FontWeight.Bold
+                        )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Разреши установку APK из NovaStore в настройках",
+                            Strings.get(language, "needs_permission_desc"),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Spacer(Modifier.height(8.dp))
                         Button(onClick = { ApkInstaller.requestInstallPermission(context) }) {
-                            Text("Разрешить")
+                            Text(Strings.get(language, "allow"))
                         }
                     }
                 }
@@ -163,11 +169,11 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             Spacer(Modifier.width(12.dp))
-                            Text("Загрузка...")
+                            Text(Strings.get(language, "loading"))
                         }
                     } else {
                         if (releases.isNotEmpty()) {
-                            Text("Версия", style = MaterialTheme.typography.labelMedium)
+                            Text(Strings.get(language, "version"), style = MaterialTheme.typography.labelMedium)
                             Spacer(Modifier.height(4.dp))
                             var expanded by remember { mutableStateOf(false) }
                             Box {
@@ -201,7 +207,10 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "${(progress * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         } else {
                             Button(
                                 onClick = {
@@ -216,15 +225,21 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                                             downloadId = DownloadService.enqueue(context, url, fileName)
                                         } else {
                                             downloading = false
-                                            status = "Ссылка не найдена"
+                                            status = Strings.get(language, "link_not_found")
                                         }
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(if (isInstalled) Icons.Filled.Update else Icons.Filled.Download, null)
+                                Icon(
+                                    if (isInstalled) Icons.Filled.Update else Icons.Filled.Download,
+                                    null
+                                )
                                 Spacer(Modifier.width(8.dp))
-                                Text(if (isInstalled) "Обновить" else "Установить")
+                                Text(
+                                    if (isInstalled) Strings.get(language, "update")
+                                    else Strings.get(language, "install")
+                                )
                             }
                         }
 
@@ -245,9 +260,9 @@ fun DetailScreen(packageName: String, onBack: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Filled.OpenInNew, null)
+                    Icon(Icons.AutoMirrored.Filled.OpenInNew, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Открыть на GitHub")
+                    Text(Strings.get(language, "open_github"))
                 }
             }
         }
