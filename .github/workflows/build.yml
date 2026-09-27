@@ -13,13 +13,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/novastore.keystore
-      - name: Verify keystore
-        run: |
-          ls -la ${{ github.workspace }}/novastore.keystore
-          keytool -list -keystore ${{ github.workspace }}/novastore.keystore -storepass novastore123 || true
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build Debug APK
