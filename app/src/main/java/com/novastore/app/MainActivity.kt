@@ -51,7 +51,6 @@ class MainActivity : ComponentActivity() {
                             val lang = pendingLang!!
                             scope.launch {
                                 prefs.setLanguage(lang)
-                                prefs.setWarningShown()
                                 language = lang
                                 showWarning = false
                                 pendingLang = null
@@ -107,7 +106,7 @@ class MainActivity : ComponentActivity() {
                                 language = language,
                                 onLanguageChange = { lang ->
                                     scope.launch {
-                                        if (lang != "ru" && !prefs.wasWarningShown()) {
+                                        if (Strings.needsWarning(lang)) {
                                             pendingLang = lang
                                             showWarning = true
                                         } else {
