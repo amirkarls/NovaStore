@@ -7,8 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +25,7 @@ import com.novastore.app.data.UpdateChecker
 import com.novastore.app.data.categoryLabel
 import com.novastore.app.i18n.Strings
 import com.novastore.app.util.AppIcon
+import com.novastore.app.util.AppUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,6 +154,9 @@ fun MainScreen(
 
 @Composable
 fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val installed = remember(app.packageName) { AppUtils.isInstalled(context, app.packageName) }
+
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -165,7 +171,22 @@ fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
             AppIcon(app.name, app.iconUrl, 56)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text(app.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        app.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (installed) {
+                        Icon(
+                            Icons.Filled.CheckCircle,
+                            null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 Text(
                     app.description(language),
                     style = MaterialTheme.typography.bodySmall,
