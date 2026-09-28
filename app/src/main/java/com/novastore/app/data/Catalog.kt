@@ -516,6 +516,7 @@ object Catalog {
             iconUrl = "https://raw.githubusercontent.com/bitwarden/mobile/master/src/Android/Resources/mipmap-xxxhdpi/icon.png",
             github = "bitwarden/mobile",
             author = "Bitwarden")
+    )
 
     val categories = listOf(
         "all", "Shizuku", "Games", "Media", "Security", "Development",
