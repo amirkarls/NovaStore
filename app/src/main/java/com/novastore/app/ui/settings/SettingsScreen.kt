@@ -94,25 +94,27 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     AccentColors.forEachIndexed { index, color ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = MaterialTheme.shapes.small,
-                                color = color,
-                                modifier = Modifier.size(36.dp)
-                            ) {}
-                            Spacer(Modifier.width(16.dp))
-                            Text(
-                                AccentNames.getOrElse(index) { "Color" },
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f)
-                            )
-                            RadioButton(
-                                selected = accentIndex == index,
-                                onClick = { onAccentColorChange(index) }
-                            )
+                        key(index) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = MaterialTheme.shapes.small,
+                                    color = color,
+                                    modifier = Modifier.size(36.dp)
+                                ) {}
+                                Spacer(Modifier.width(16.dp))
+                                Text(
+                                    AccentNames.getOrElse(index) { "Color" },
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                RadioButton(
+                                    selected = accentIndex == index,
+                                    onClick = { onAccentColorChange(index) }
+                                )
+                            }
                         }
                     }
                 }
@@ -240,7 +242,7 @@ fun SettingsScreen(
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text("NovaStore beta 1.5", style = MaterialTheme.typography.bodyMedium)
+                Text("NovaStore beta 1.6", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     Strings.get(language, "about_text"),
