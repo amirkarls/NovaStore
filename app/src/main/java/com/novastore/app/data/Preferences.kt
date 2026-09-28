@@ -22,6 +22,7 @@ class Preferences(private val context: Context) {
         val DOWNLOAD_APP = stringPreferencesKey("download_app")
         val SMOOTH_ANIMATIONS = booleanPreferencesKey("smooth_animations")
         val UPDATE_NOTIFICATIONS = booleanPreferencesKey("update_notifications")
+        val APP_ICON = stringPreferencesKey("app_icon")
     }
 
     suspend fun getGithubToken(): String = context.dataStore.data.first()[GITHUB_TOKEN] ?: ""
@@ -81,5 +82,11 @@ class Preferences(private val context: Context) {
         context.dataStore.data.first()[UPDATE_NOTIFICATIONS] ?: true
     suspend fun setUpdateNotifications(value: Boolean) {
         context.dataStore.edit { it[UPDATE_NOTIFICATIONS] = value }
+    }
+
+    suspend fun getAppIcon(): String =
+        context.dataStore.data.first()[APP_ICON] ?: "white"
+    suspend fun setAppIcon(icon: String) {
+        context.dataStore.edit { it[APP_ICON] = icon }
     }
 }
