@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +19,7 @@ import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.detail.DetailScreen
+import com.novastore.app.ui.downloads.DownloadsScreen
 import com.novastore.app.ui.language.LanguageScreen
 import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
@@ -87,6 +89,7 @@ class MainActivity : ComponentActivity() {
                         val navController = rememberNavController()
                         val items = listOf(
                             Triple("main", "tab_catalog", Icons.Filled.Apps),
+                            Triple("downloads", "Downloads", Icons.Filled.Download),
                             Triple("settings", "tab_settings", Icons.Filled.Settings)
                         )
                         Scaffold(
@@ -105,7 +108,11 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             },
                                             icon = { Icon(icon, null) },
-                                            label = { Text(Strings.get(language, labelKey)) }
+                                            label = {
+                                                val label = if (labelKey == "Downloads") "Downloads"
+                                                else Strings.get(language, labelKey)
+                                                Text(label)
+                                            }
                                         )
                                     }
                                 }
@@ -122,6 +129,9 @@ class MainActivity : ComponentActivity() {
                                         updateNotifications = updateNotifications,
                                         onAppClick = { pkg -> navController.navigate("detail/$pkg") }
                                     )
+                                }
+                                composable("downloads") {
+                                    DownloadsScreen(language = language)
                                 }
                                 composable("settings") {
                                     SettingsScreen(

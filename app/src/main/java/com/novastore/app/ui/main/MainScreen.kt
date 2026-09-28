@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.novastore.app.BuildConfig
 import com.novastore.app.data.AppInfo
 import com.novastore.app.data.Catalog
+import com.novastore.app.data.CatalogExtra
+import com.novastore.app.data.CatalogExtra2
 import com.novastore.app.data.UpdateChecker
 import com.novastore.app.data.categoryLabel
 import com.novastore.app.i18n.Strings
@@ -48,13 +50,23 @@ fun MainScreen(
         }
     }
 
+    val allApps = remember { Catalog.apps + CatalogExtra.apps + CatalogExtra2.apps }
     val categories = Catalog.categories
 
-    val filtered = Catalog.apps.filter { app ->
-        (selectedCategory == "all" || app.category == selectedCategory) &&
-        (query.isBlank() ||
-            app.name.contains(query, true) ||
-            app.description(language).contains(query, true))
+    val filtered = allApps.filter { app ->
+        val matchesCategory = selectedCategory == "all" || app.category == selectedCategory
+        if (!matchesCategory) return@filter false
+
+        if (query.isBlank()) return@filter true
+
+        val q = query.lowercase()
+        val name = app.name.lowercase()
+        val desc = app.description(language).lowercase()
+        val cat = categoryLabel(language, app.category).lowercase()
+        val author = app.author.lowercase()
+        val pkg = app.packageName.lowercase()
+
+        name.contains(q) || desc.contains(q) || cat.contains(q) || author.contains(q) || pkg.contains(q)
     }
 
     Scaffold(
