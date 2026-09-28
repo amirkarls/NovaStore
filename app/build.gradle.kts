@@ -9,7 +9,7 @@ android {
         applicationId = "com.novastore.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 31
+        versionCode = 32
         versionName = "1.7"
     }
     signingConfigs {
