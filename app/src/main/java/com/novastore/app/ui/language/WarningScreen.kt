@@ -12,15 +12,10 @@ import androidx.compose.ui.unit.dp
 import com.novastore.app.i18n.Strings
 
 @Composable
-fun WarningScreen(
-    language: String,
-    onAccept: () -> Unit
-) {
+fun WarningScreen(language: String, onAccept: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(28.dp),
+            modifier = Modifier.fillMaxSize().padding(28.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -38,29 +33,20 @@ fun WarningScreen(
                     )
                 }
             }
-
             Spacer(Modifier.height(28.dp))
-
             Text(
                 Strings.get(language, "warning_title"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
-
             Spacer(Modifier.height(16.dp))
-
             Text(
                 Strings.get(language, "warning_text"),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
             Spacer(Modifier.height(40.dp))
-
-            Button(
-                onClick = onAccept,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
+            Button(onClick = onAccept, modifier = Modifier.fillMaxWidth().height(56.dp)) {
                 Text(Strings.get(language, "warning_ok"))
             }
         }

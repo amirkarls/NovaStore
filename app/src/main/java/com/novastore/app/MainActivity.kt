@@ -52,13 +52,9 @@ class MainActivity : ComponentActivity() {
                 loaded = true
             }
 
-            NovaStoreTheme(
-                dynamicColor = dynamicColor,
-                accentIndex = accentIndex
-            ) {
+            NovaStoreTheme(dynamicColor = dynamicColor, accentIndex = accentIndex) {
                 when {
                     !loaded -> {}
-
                     !languageSelected -> {
                         LanguageScreen(onSelected = { lang ->
                             scope.launch {
@@ -74,31 +70,25 @@ class MainActivity : ComponentActivity() {
                             }
                         })
                     }
-
                     showWarning && pendingLang != null -> {
-                        WarningScreen(
-                            language = pendingLang!!,
-                            onAccept = {
-                                val lang = pendingLang!!
-                                scope.launch {
-                                    prefs.setLanguage(lang)
-                                    prefs.setLanguageSelected()
-                                    language = lang
-                                    languageSelected = true
-                                    showWarning = false
-                                    pendingLang = null
-                                }
+                        WarningScreen(language = pendingLang!!, onAccept = {
+                            val lang = pendingLang!!
+                            scope.launch {
+                                prefs.setLanguage(lang)
+                                prefs.setLanguageSelected()
+                                language = lang
+                                languageSelected = true
+                                showWarning = false
+                                pendingLang = null
                             }
-                        )
+                        })
                     }
-
                     else -> {
                         val navController = rememberNavController()
                         val items = listOf(
                             Triple("main", "tab_catalog", Icons.Filled.Apps),
                             Triple("settings", "tab_settings", Icons.Filled.Settings)
                         )
-
                         Scaffold(
                             bottomBar = {
                                 NavigationBar {
@@ -130,9 +120,7 @@ class MainActivity : ComponentActivity() {
                                     MainScreen(
                                         language = language,
                                         updateNotifications = updateNotifications,
-                                        onAppClick = { pkg ->
-                                            navController.navigate("detail/$pkg")
-                                        }
+                                        onAppClick = { pkg -> navController.navigate("detail/$pkg") }
                                     )
                                 }
                                 composable("settings") {
@@ -153,30 +141,10 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         },
-                                        onDynamicColorChange = { value ->
-                                            scope.launch {
-                                                prefs.setDynamicColor(value)
-                                                dynamicColor = value
-                                            }
-                                        },
-                                        onAccentColorChange = { index ->
-                                            scope.launch {
-                                                prefs.setAccentColor(index)
-                                                accentIndex = index
-                                            }
-                                        },
-                                        onSmoothAnimationsChange = { value ->
-                                            scope.launch {
-                                                prefs.setSmoothAnimations(value)
-                                                smoothAnimations = value
-                                            }
-                                        },
-                                        onUpdateNotificationsChange = { value ->
-                                            scope.launch {
-                                                prefs.setUpdateNotifications(value)
-                                                updateNotifications = value
-                                            }
-                                        }
+                                        onDynamicColorChange = { v -> scope.launch { prefs.setDynamicColor(v); dynamicColor = v } },
+                                        onAccentColorChange = { i -> scope.launch { prefs.setAccentColor(i); accentIndex = i } },
+                                        onSmoothAnimationsChange = { v -> scope.launch { prefs.setSmoothAnimations(v); smoothAnimations = v } },
+                                        onUpdateNotificationsChange = { v -> scope.launch { prefs.setUpdateNotifications(v); updateNotifications = v } }
                                     )
                                 }
                                 composable("detail/{pkg}") { back ->

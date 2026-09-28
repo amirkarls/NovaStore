@@ -24,12 +24,8 @@ fun NovaStoreTheme(
         }
         else -> {
             val accent = AccentColors.getOrElse(accentIndex) { AccentColors[0] }
-            if (darkTheme) {
-                darkColorScheme(primary = accent)
-            } else {
-                lightColorScheme(primary = accent)
-            }
+            if (darkTheme) darkColorScheme(primary = accent) else lightColorScheme(primary = accent)
         }
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
 }

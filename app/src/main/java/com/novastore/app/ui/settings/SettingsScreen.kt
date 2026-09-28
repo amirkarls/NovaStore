@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.novastore.app.BuildConfig
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
@@ -50,17 +51,10 @@ fun SettingsScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            Strings.get(language, "settings"),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
+        Text(Strings.get(language, "settings"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
@@ -78,20 +72,15 @@ fun SettingsScreen(
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "appearance"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
-
                 SwitchRow(
                     title = Strings.get(language, "material_you"),
                     subtitle = Strings.get(language, "colors_from_wallpaper"),
                     checked = dynamicColor,
                     onChange = onDynamicColorChange
                 )
-
                 if (!dynamicColor) {
                     Spacer(Modifier.height(16.dp))
-                    Text(
-                        Strings.get(language, "accent_color"),
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    Text(Strings.get(language, "accent_color"), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(8.dp))
                     AccentColors.forEachIndexed { index, color ->
                         key(index) {
@@ -99,30 +88,21 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = color,
-                                    modifier = Modifier.size(36.dp)
-                                ) {}
+                                Surface(shape = MaterialTheme.shapes.small, color = color, modifier = Modifier.size(36.dp)) {}
                                 Spacer(Modifier.width(16.dp))
                                 Text(
                                     AccentNames.getOrElse(index) { "Color" },
                                     style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
-                                RadioButton(
-                                    selected = accentIndex == index,
-                                    onClick = { onAccentColorChange(index) }
-                                )
+                                RadioButton(selected = accentIndex == index, onClick = { onAccentColorChange(index) })
                             }
                         }
                     }
                 }
-
                 Spacer(Modifier.height(12.dp))
                 HorizontalDivider()
                 Spacer(Modifier.height(12.dp))
-
                 SwitchRow(
                     title = Strings.get(language, "animations"),
                     subtitle = Strings.get(language, "animations_desc"),
@@ -134,7 +114,7 @@ fun SettingsScreen(
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
+                Text(Strings.get(language, "settings"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 SwitchRow(
                     title = Strings.get(language, "update_notifications"),
@@ -155,7 +135,6 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(12.dp))
-
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
@@ -164,7 +143,6 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = {
@@ -172,13 +150,10 @@ fun SettingsScreen(
                             prefs.setGithubToken(token)
                             GitHubApi.token = token
                             savedToken = token
-                            status = if (token.isBlank())
-                                Strings.get(language, "token_removed")
+                            status = if (token.isBlank()) Strings.get(language, "token_removed")
                             else Strings.get(language, "token_saved")
                         }
-                    }) {
-                        Text(Strings.get(language, "save"))
-                    }
+                    }) { Text(Strings.get(language, "save")) }
                     OutlinedButton(
                         onClick = {
                             scope.launch {
@@ -192,9 +167,7 @@ fun SettingsScreen(
                             }
                         },
                         enabled = !checking && token.isNotBlank()
-                    ) {
-                        Text(Strings.get(language, "check"))
-                    }
+                    ) { Text(Strings.get(language, "check")) }
                     if (token.isNotBlank()) {
                         TextButton(onClick = {
                             scope.launch {
@@ -204,18 +177,14 @@ fun SettingsScreen(
                                 savedToken = ""
                                 status = Strings.get(language, "token_removed")
                             }
-                        }) {
-                            Text(Strings.get(language, "clear"))
-                        }
+                        }) { Text(Strings.get(language, "clear")) }
                     }
                 }
-
                 if (status.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            if (status == Strings.get(language, "token_works"))
-                                Icons.Filled.CheckCircle
+                            if (status == Strings.get(language, "token_works")) Icons.Filled.CheckCircle
                             else Icons.Filled.Error,
                             null,
                             tint = if (status == Strings.get(language, "token_works"))
@@ -226,15 +195,6 @@ fun SettingsScreen(
                         Text(status, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-
-                if (savedToken.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "${savedToken.take(7)}...${savedToken.takeLast(4)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
         }
 
@@ -242,7 +202,7 @@ fun SettingsScreen(
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.get(language, "about"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text("NovaStore beta 1.6", style = MaterialTheme.typography.bodyMedium)
+                Text("NovaStore ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     Strings.get(language, "about_text"),
@@ -255,12 +215,7 @@ fun SettingsScreen(
 }
 
 @Composable
-fun SwitchRow(
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onChange: (Boolean) -> Unit
-) {
+fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

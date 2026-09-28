@@ -12,10 +12,5 @@ val AccentColors = listOf(
 )
 
 val AccentNames = listOf(
-    "Purple",
-    "Teal",
-    "Amber",
-    "Pink",
-    "Green",
-    "Blue"
+    "Purple", "Teal", "Amber", "Pink", "Green", "Blue"
 )

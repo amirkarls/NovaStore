@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,10 +48,7 @@ fun MainScreen(
         }
     }
 
-    val categories = listOf(
-        "all", "Shizuku", "Games", "Media", "Security", "Development",
-        "Stores", "Communication", "Navigation", "Tools", "Browsers", "Education", "Productivity"
-    )
+    val categories = Catalog.categories
 
     val filtered = Catalog.apps.filter { app ->
         (selectedCategory == "all" || app.category == selectedCategory) &&
@@ -65,21 +61,15 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = { Text(Strings.get(language, "app_name"), fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             if (updateNotifications && updateAvailable != null && !dismissed) {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -92,21 +82,14 @@ fun MainScreen(
                             )
                         }
                         Spacer(Modifier.height(4.dp))
-                        Text(
-                            Strings.get(language, "update_text"),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        Text(Strings.get(language, "update_text"), style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateAvailable!!.apkUrl))
                                 context.startActivity(intent)
-                            }) {
-                                Text(Strings.get(language, "update_button"))
-                            }
-                            TextButton(onClick = { dismissed = true }) {
-                                Text(Strings.get(language, "later"))
-                            }
+                            }) { Text(Strings.get(language, "update_button")) }
+                            TextButton(onClick = { dismissed = true }) { Text(Strings.get(language, "later")) }
                         }
                     }
                 }
@@ -160,9 +143,7 @@ fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),

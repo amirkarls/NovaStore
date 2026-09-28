@@ -23,8 +23,8 @@ import com.novastore.app.data.Downloader
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
 import com.novastore.app.data.ReleaseInfo
-import com.novastore.app.i18n.Strings
 import com.novastore.app.data.categoryLabel
+import com.novastore.app.i18n.Strings
 import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.AppIcon
 import com.novastore.app.util.AppUtils
@@ -139,23 +139,26 @@ fun DetailScreen(
             AssistChip(onClick = {}, label = { Text(categoryLabel(language, app.category)) })
             Spacer(Modifier.height(20.dp))
             Text(app.description(language), style = MaterialTheme.typography.bodyLarge)
+            if (app.author.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "${Strings.get(language, "author")}: ${app.author}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
 
             if (needsPermission) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(Strings.get(language, "needs_permission"), fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
-                        Text(
-                            Strings.get(language, "needs_permission_desc"),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        Text(Strings.get(language, "needs_permission_desc"), style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(8.dp))
                         Button(onClick = { ApkInstaller.requestInstallPermission(context) }) {
                             Text(Strings.get(language, "allow"))
@@ -179,23 +182,14 @@ fun DetailScreen(
                             Spacer(Modifier.height(4.dp))
                             var expanded by remember { mutableStateOf(false) }
                             Box {
-                                OutlinedButton(
-                                    onClick = { expanded = true },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
+                                OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
                                     Text(selectedRelease?.version ?: "—")
                                 }
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
+                                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                     releases.forEach { rel ->
                                         DropdownMenuItem(
                                             text = { Text(rel.version) },
-                                            onClick = {
-                                                selectedRelease = rel
-                                                expanded = false
-                                            }
+                                            onClick = { selectedRelease = rel; expanded = false }
                                         )
                                     }
                                 }
@@ -204,10 +198,7 @@ fun DetailScreen(
                         }
 
                         if (downloading) {
-                            LinearProgressIndicator(
-                                progress = { progress },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
                             Spacer(Modifier.height(8.dp))
                             Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
                         } else {
@@ -217,8 +208,7 @@ fun DetailScreen(
                                         downloading = true
                                         progress = 0f
                                         status = ""
-                                        val url = selectedRelease?.apkUrl
-                                            ?: Downloader.resolveApkUrl(app)
+                                        val url = selectedRelease?.apkUrl ?: Downloader.resolveApkUrl(app)
                                         if (url != null) {
                                             val fileName = "${app.name}.apk".replace(" ", "_")
                                             val id = DownloadService.enqueue(context, url, fileName)
@@ -233,10 +223,7 @@ fun DetailScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    if (isInstalled) Icons.Filled.Update else Icons.Filled.Download,
-                                    null
-                                )
+                                Icon(if (isInstalled) Icons.Filled.Update else Icons.Filled.Download, null)
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     if (isInstalled) Strings.get(language, "update")

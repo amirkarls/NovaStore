@@ -9,7 +9,6 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 object ApkInstaller {
-
     fun hasInstallPermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.packageManager.canRequestPackageInstalls()

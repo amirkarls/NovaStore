@@ -18,12 +18,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.novastore.app.i18n.Strings
 
 @Composable
-fun LanguageScreen(
-    onSelected: (String) -> Unit
-) {
+fun LanguageScreen(onSelected: (String) -> Unit) {
     val fade = remember { Animatable(0f) }
     val scale = remember { Animatable(0.9f) }
 
@@ -109,9 +106,7 @@ fun LangButton(flag: String, title: String, subtitle: String, onClick: () -> Uni
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(72.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(

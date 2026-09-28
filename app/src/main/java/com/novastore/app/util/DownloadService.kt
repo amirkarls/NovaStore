@@ -9,7 +9,7 @@ object DownloadService {
     fun enqueue(context: Context, url: String, fileName: String): Long {
         val request = DownloadManager.Request(Uri.parse(url))
             .setTitle(fileName)
-            .setDescription("Скачивание из NovaStore")
+            .setDescription("NovaStore")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             .setDestinationInExternalPublicDir(
                 Environment.DIRECTORY_DOWNLOADS,

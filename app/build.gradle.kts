@@ -9,8 +9,8 @@ android {
         applicationId = "com.novastore.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 27
-        versionName = "beta1.6"
+        versionCode = 116
+        versionName = "fullrework1.16"
     }
     signingConfigs {
         create("custom") {
