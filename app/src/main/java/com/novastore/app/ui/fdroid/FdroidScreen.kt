@@ -3,6 +3,7 @@ package com.novastore.app.ui.fdroid
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Refresh
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +27,8 @@ import com.novastore.app.data.FdroidResult
 import com.novastore.app.i18n.Strings
 import kotlinx.coroutines.launch
 
+private const val PAGE_SIZE = 100
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FdroidScreen(
@@ -33,24 +37,27 @@ fun FdroidScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var apps by remember { mutableStateOf<List<FdroidApp>>(emptyList()) }
-    var filtered by remember { mutableStateOf<List<FdroidApp>>(emptyList()) }
+    var allApps by remember { mutableStateOf<List<FdroidApp>>(emptyList()) }
+    var visibleApps by remember { mutableStateOf<List<FdroidApp>>(emptyList()) }
     var query by remember { mutableStateOf("") }
+    var currentPage by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
 
     suspend fun reload(force: Boolean) {
         loading = true
         errorMessage = null
         when (val result = FdroidApi.loadCatalog(context, force)) {
             is FdroidResult.Success -> {
-                apps = result.apps
-                filtered = result.apps
+                allApps = result.apps
+                currentPage = 0
+                visibleApps = result.apps.take(PAGE_SIZE)
                 errorMessage = null
             }
             is FdroidResult.Error -> {
-                apps = emptyList()
-                filtered = emptyList()
+                allApps = emptyList()
+                visibleApps = emptyList()
                 errorMessage = result.message
             }
         }
@@ -61,14 +68,39 @@ fun FdroidScreen(
         reload(false)
     }
 
+    // Поиск — фильтруем и сбрасываем на первую страницу
     LaunchedEffect(query) {
-        filtered = if (query.isBlank()) apps else apps.filter { app ->
+        val source = if (query.isBlank()) allApps else allApps.filter { app ->
             val q = query.lowercase()
             app.name.lowercase().contains(q) ||
             app.packageName.lowercase().contains(q) ||
             app.summary.lowercase().contains(q) ||
             app.author.lowercase().contains(q)
         }
+        currentPage = 0
+        visibleApps = source.take(PAGE_SIZE)
+    }
+
+    // Пагинация — когда пользователь доходит до конца, добавляем ещё 100
+    LaunchedEffect(listState, visibleApps.size, query) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
+            .collect { lastIndex ->
+                if (lastIndex >= visibleApps.size - 5) {
+                    val source = if (query.isBlank()) allApps else allApps.filter { app ->
+                        val q = query.lowercase()
+                        app.name.lowercase().contains(q) ||
+                        app.packageName.lowercase().contains(q) ||
+                        app.summary.lowercase().contains(q) ||
+                        app.author.lowercase().contains(q)
+                    }
+                    val nextPage = currentPage + 1
+                    val newEnd = minOf((nextPage + 1) * PAGE_SIZE, source.size)
+                    if (newEnd > visibleApps.size) {
+                        visibleApps = source.take(newEnd)
+                        currentPage = nextPage
+                    }
+                }
+            }
     }
 
     Scaffold(
@@ -162,19 +194,27 @@ fun FdroidScreen(
                 }
                 else -> {
                     LazyColumn(
+                        state = listState,
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(filtered) { app ->
+                        items(visibleApps) { app ->
                             FdroidCard(app, onClick = { onAppClick(app.packageName) })
                         }
-                        if (filtered.isEmpty()) {
+                        if (visibleApps.isEmpty()) {
                             item {
                                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                     Text(
                                         Strings.get(language, "nothing_found"),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                }
+                            }
+                        }
+                        if (visibleApps.size < (if (query.isBlank()) allApps.size else allApps.size)) {
+                            item {
+                                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                                 }
                             }
                         }

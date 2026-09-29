@@ -26,6 +26,8 @@ import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.theme.AccentColors
 import com.novastore.app.ui.theme.AccentNames
 import com.novastore.app.util.IconSwitcher
+import com.novastore.app.util.PingResult
+import com.novastore.app.util.PingTest
 import kotlinx.coroutines.launch
 
 data class IconOption(val id: String, val label: String, val color: Color)
@@ -85,6 +87,64 @@ fun SettingsScreen(
                 LangRow("Українська", "uk", language, onLanguageChange)
                 LangRow("Қазақша", "kk", language, onLanguageChange)
                 LangRow("Español", "es", language, onLanguageChange)
+            }
+        }
+
+
+        var pingResult by remember { mutableStateOf<PingResult?>(null) }
+        var pingLoading by remember { mutableStateOf(false) }
+
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Network test", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Check internet connection speed",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = {
+                        scope.launch {
+                            pingLoading = true
+                            pingResult = PingTest.test()
+                            pingLoading = false
+                        }
+                    },
+                    enabled = !pingLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (pingLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Testing...")
+                    } else {
+                        Text("Test connection")
+                    }
+                }
+                if (pingResult != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (pingResult!!.success)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(
+                                if (pingResult!!.success) "Connected" else "Failed",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text("Host: ${pingResult!!.host}", style = MaterialTheme.typography.bodySmall)
+                            Text("Latency: ${pingResult!!.latencyMs} ms", style = MaterialTheme.typography.bodySmall)
+                            Text("Status: ${pingResult!!.message}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
         }
 
