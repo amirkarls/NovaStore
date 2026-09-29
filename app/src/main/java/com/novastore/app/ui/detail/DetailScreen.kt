@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.novastore.app.data.Catalog
+import com.novastore.app.data.CatalogExtra
+import com.novastore.app.data.CatalogExtra2
 import com.novastore.app.data.Downloader
 import com.novastore.app.data.GitHubApi
 import com.novastore.app.data.Preferences
@@ -42,7 +44,10 @@ fun DetailScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { Preferences(context) }
-    val app = Catalog.apps.firstOrNull { it.packageName == packageName }
+    val app = remember(packageName) {
+        (Catalog.apps + CatalogExtra.apps + CatalogExtra2.apps)
+            .firstOrNull { it.packageName == packageName }
+    }
     val scope = rememberCoroutineScope()
     var releases by remember { mutableStateOf<List<ReleaseInfo>>(emptyList()) }
     var selectedRelease by remember { mutableStateOf<ReleaseInfo?>(null) }
@@ -106,7 +111,7 @@ fun DetailScreen(
                 title = { Text(app?.name ?: "—") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )

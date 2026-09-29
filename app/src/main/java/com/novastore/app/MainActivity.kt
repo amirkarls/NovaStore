@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                         val navController = rememberNavController()
                         val items = listOf(
                             Triple("main", "tab_catalog", Icons.Filled.Apps),
-                            Triple("downloads", "Downloads", Icons.Filled.Download),
+                            Triple("downloads", "tab_downloads", Icons.Filled.Download),
                             Triple("settings", "tab_settings", Icons.Filled.Settings)
                         )
                         Scaffold(
@@ -109,8 +109,8 @@ class MainActivity : ComponentActivity() {
                                             },
                                             icon = { Icon(icon, null) },
                                             label = {
-                                                val label = if (labelKey == "Downloads") "Downloads"
-                                                else Strings.get(language, labelKey)
+                                                val label = Strings.get(language, labelKey)
+                                                Strings.get(language, labelKey)
                                                 Text(label)
                                             }
                                         )

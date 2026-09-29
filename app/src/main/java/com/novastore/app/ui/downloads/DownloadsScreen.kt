@@ -1,14 +1,13 @@
 package com.novastore.app.ui.downloads
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.InstallMobile
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.novastore.app.i18n.Strings
 import com.novastore.app.util.ApkInstaller
 import java.io.File
 import java.text.SimpleDateFormat
@@ -65,10 +65,10 @@ fun DownloadsScreen(language: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Downloads", fontWeight = FontWeight.Bold) },
+                title = { Text(Strings.get(language, "tab_downloads"), fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = { refreshTrigger++ }) {
-                        Icon(Icons.Filled.Download, contentDescription = "Refresh")
+                        Icon(Icons.Filled.Refresh, contentDescription = Strings.get(language, "refresh"))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -86,13 +86,13 @@ fun DownloadsScreen(language: String) {
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "No downloads yet",
+                        Strings.get(language, "downloads_empty"),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Downloaded APKs will appear here",
+                        Strings.get(language, "downloads_empty_desc"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -127,14 +127,12 @@ fun DownloadsScreen(language: String) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Button(
-                                    onClick = {
-                                        ApkInstaller.installApk(context, apk.file)
-                                    },
+                                    onClick = { ApkInstaller.installApk(context, apk.file) },
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Icon(Icons.Filled.InstallMobile, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Install")
+                                    Text(Strings.get(language, "install_short"))
                                 }
                                 OutlinedButton(
                                     onClick = {

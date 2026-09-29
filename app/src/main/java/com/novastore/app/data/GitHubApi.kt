@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import org.json.JSONObject
 
 object GitHubApi {
     private val client = OkHttpClient()
@@ -68,4 +69,22 @@ object GitHubApi {
             false
         }
     }
+
+    suspend fun getUserInfo(): UserInfo? = withContext(Dispatchers.IO) {
+        try {
+            val request = addAuth(Request.Builder().url("https://api.github.com/user")).build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: return@withContext null
+            val json = JSONObject(body)
+            UserInfo(
+                login = json.optString("login", ""),
+                name = json.optString("name", ""),
+                avatarUrl = json.optString("avatar_url", "")
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
+
+data class UserInfo(val login: String, val name: String, val avatarUrl: String)

@@ -13,7 +13,8 @@ data class AppInfo(
     val category: String,
     val iconUrl: String,
     val apkUrl: String? = null,
-    val fdroid: Boolean = false
+    val fdroid: Boolean = false,
+    val rating: Float = 0f
 ) {
     fun description(lang: String): String = when (lang) {
         "ru" -> descriptionRu.ifBlank { description }

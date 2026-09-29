@@ -134,7 +134,7 @@ fun SettingsScreen(
 
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text("App icon", style = MaterialTheme.typography.titleMedium)
+                Text(Strings.get(language, "app_icon"), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "Choose your app icon on home screen",

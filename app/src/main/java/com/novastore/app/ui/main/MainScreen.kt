@@ -10,10 +10,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -192,11 +194,26 @@ fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    categoryLabel(language, app.category),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Star,
+                        null,
+                        tint = Color(0xFFFFC107),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        if (app.rating > 0) "%.1f".format(app.rating) else "—",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        categoryLabel(language, app.category),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

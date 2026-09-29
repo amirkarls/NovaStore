@@ -223,7 +223,7 @@ object CatalogExtra {
         AppInfo("Retro Music", "code.name.monkey.retromusic",
             "Music player",
             category = "Media",
-            iconUrl = "https://raw.githubusercontent.com/RetroMusicPlayer/RetroMusicPlayer/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+            iconUrl = "https://raw.githubusercontent.com/RetroMusicPlayer/RetroMusicPlayer/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp",
             github = "RetroMusicPlayer/RetroMusicPlayer",
             author = "Retro Music"),
         AppInfo("YTDLnis", "com.deniscerri.ytdl",

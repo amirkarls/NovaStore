@@ -4,12 +4,16 @@ object Strings {
     private val ru = mapOf(
         "app_name" to "NovaStore",
         "tab_catalog" to "Каталог",
+        "tab_downloads" to "Загрузки",
         "tab_settings" to "Настройки",
         "search_hint" to "Поиск приложений",
         "nothing_found" to "Ничего не найдено",
         "install" to "Установить",
+        "install_short" to "Установить",
         "update" to "Обновить",
         "installed" to "Установлено",
+        "delete" to "Удалить",
+        "refresh" to "Обновить",
         "open_github" to "Открыть на GitHub",
         "loading" to "Загрузка...",
         "download_finished" to "Загрузка завершена",
@@ -37,7 +41,7 @@ object Strings {
         "token_not_works" to "Токен не работает",
         "checking" to "Проверка...",
         "about" to "О приложении",
-        "about_text" to "Магазин open-source приложений с прямыми ссылками из F-Droid и GitHub.",
+        "about_text" to "Магазин open-source приложений с прямыми ссылками из GitHub.",
         "warning_title" to "Внимание!",
         "warning_text" to "Этот язык был переведён машинным переводом и может содержать ошибки.",
         "warning_ok" to "Понятно",
@@ -50,18 +54,26 @@ object Strings {
         "animations_desc" to "Анимации переходов",
         "update_notifications" to "Уведомления об обновлении",
         "update_notifications_desc" to "Показывать баннер новой версии",
-        "author" to "Автор"
+        "author" to "Автор",
+        "app_icon" to "Иконка приложения",
+        "app_icon_desc" to "Выбери иконку на рабочем столе",
+        "downloads_empty" to "Пока ничего не скачано",
+        "downloads_empty_desc" to "Скачанные APK появятся здесь"
     )
 
     private val en = mapOf(
         "app_name" to "NovaStore",
         "tab_catalog" to "Catalog",
+        "tab_downloads" to "Downloads",
         "tab_settings" to "Settings",
         "search_hint" to "Search apps",
         "nothing_found" to "Nothing found",
         "install" to "Install",
+        "install_short" to "Install",
         "update" to "Update",
         "installed" to "Installed",
+        "delete" to "Delete",
+        "refresh" to "Refresh",
         "open_github" to "Open on GitHub",
         "loading" to "Loading...",
         "download_finished" to "Download finished",
@@ -89,7 +101,7 @@ object Strings {
         "token_not_works" to "Token doesn't work",
         "checking" to "Checking...",
         "about" to "About",
-        "about_text" to "Open-source app store with direct links from F-Droid and GitHub.",
+        "about_text" to "Open-source app store with direct links from GitHub.",
         "warning_title" to "Attention!",
         "warning_text" to "This language was translated by machine translation and may contain errors.",
         "warning_ok" to "Got it",
@@ -102,18 +114,26 @@ object Strings {
         "animations_desc" to "Screen transitions",
         "update_notifications" to "Update notifications",
         "update_notifications_desc" to "Show new version banner",
-        "author" to "Author"
+        "author" to "Author",
+        "app_icon" to "App icon",
+        "app_icon_desc" to "Choose your app icon on home screen",
+        "downloads_empty" to "No downloads yet",
+        "downloads_empty_desc" to "Downloaded APKs will appear here"
     )
 
     private val uk = mapOf(
         "app_name" to "NovaStore",
         "tab_catalog" to "Каталог",
+        "tab_downloads" to "Завантаження",
         "tab_settings" to "Налаштування",
         "search_hint" to "Пошук додатків",
         "nothing_found" to "Нічого не знайдено",
         "install" to "Встановити",
+        "install_short" to "Встановити",
         "update" to "Оновити",
         "installed" to "Встановлено",
+        "delete" to "Видалити",
+        "refresh" to "Оновити",
         "open_github" to "Відкрити на GitHub",
         "loading" to "Завантаження...",
         "download_finished" to "Завантаження завершено",
@@ -130,7 +150,7 @@ object Strings {
         "later" to "Пізніше",
         "settings" to "Налаштування",
         "github_token" to "GitHub токен",
-        "github_token_desc" to "Токен для GitHub API. Без нього — 60/год, з ним — 5000.",
+        "github_token_desc" to "Токен для GitHub API.",
         "github_token_hint" to "Personal Access Token",
         "save" to "Зберегти",
         "check" to "Перевірити",
@@ -154,18 +174,26 @@ object Strings {
         "animations_desc" to "Анімації переходів",
         "update_notifications" to "Повідомлення про оновлення",
         "update_notifications_desc" to "Показувати банер нової версії",
-        "author" to "Автор"
+        "author" to "Автор",
+        "app_icon" to "Іконка додатку",
+        "app_icon_desc" to "Вибери іконку на робочому столі",
+        "downloads_empty" to "Поки нічого не завантажено",
+        "downloads_empty_desc" to "Завантажені APK з'являться тут"
     )
 
     private val kk = mapOf(
         "app_name" to "NovaStore",
         "tab_catalog" to "Каталог",
+        "tab_downloads" to "Жүктеулер",
         "tab_settings" to "Параметрлер",
         "search_hint" to "Қолданбаларды іздеу",
         "nothing_found" to "Ештеңе табылмады",
         "install" to "Орнату",
+        "install_short" to "Орнату",
         "update" to "Жаңарту",
         "installed" to "Орнатылған",
+        "delete" to "Жою",
+        "refresh" to "Жаңарту",
         "open_github" to "GitHub-та ашу",
         "loading" to "Жүктелуде...",
         "download_finished" to "Жүктеу аяқталды",
@@ -206,18 +234,26 @@ object Strings {
         "animations_desc" to "Ауысу анимациялары",
         "update_notifications" to "Жаңарту хабарламалары",
         "update_notifications_desc" to "Жаңа нұсқа баннерін көрсету",
-        "author" to "Авторы"
+        "author" to "Авторы",
+        "app_icon" to "Қолданба белгішесі",
+        "app_icon_desc" to "Жұмыс үстеліндегі белгішені таңдаңыз",
+        "downloads_empty" to "Әзірге жүктелген жоқ",
+        "downloads_empty_desc" to "Жүктелген APK осында пайда болады"
     )
 
     private val es = mapOf(
         "app_name" to "NovaStore",
         "tab_catalog" to "Catálogo",
+        "tab_downloads" to "Descargas",
         "tab_settings" to "Ajustes",
         "search_hint" to "Buscar apps",
         "nothing_found" to "Nada encontrado",
         "install" to "Instalar",
+        "install_short" to "Instalar",
         "update" to "Actualizar",
         "installed" to "Instalado",
+        "delete" to "Eliminar",
+        "refresh" to "Actualizar",
         "open_github" to "Abrir en GitHub",
         "loading" to "Cargando...",
         "download_finished" to "Descarga completa",
@@ -245,7 +281,7 @@ object Strings {
         "token_not_works" to "Token no funciona",
         "checking" to "Verificando...",
         "about" to "Acerca de",
-        "about_text" to "Tienda open-source con enlaces de F-Droid y GitHub.",
+        "about_text" to "Tienda open-source con enlaces de GitHub.",
         "warning_title" to "¡Atención!",
         "warning_text" to "Este idioma fue traducido automáticamente.",
         "warning_ok" to "Entendido",
@@ -258,7 +294,11 @@ object Strings {
         "animations_desc" to "Transiciones entre pantallas",
         "update_notifications" to "Notificaciones de actualización",
         "update_notifications_desc" to "Mostrar banner de nueva versión",
-        "author" to "Autor"
+        "author" to "Autor",
+        "app_icon" to "Icono de la app",
+        "app_icon_desc" to "Elige el icono en la pantalla de inicio",
+        "downloads_empty" to "Sin descargas aún",
+        "downloads_empty_desc" to "Los APK descargados aparecerán aquí"
     )
 
     fun get(lang: String, key: String): String {
