@@ -28,6 +28,7 @@ import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
 import com.novastore.app.ui.network.NoInternetScreen
 import com.novastore.app.ui.settings.SettingsScreen
+import com.novastore.app.ui.splash.SplashScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
 import kotlinx.coroutines.launch
 
@@ -53,6 +54,7 @@ class MainActivity : ComponentActivity() {
             var smoothAnimations by remember { mutableStateOf(true) }
             var updateNotifications by remember { mutableStateOf(true) }
             var online by remember { mutableStateOf(isOnline(applicationContext)) }
+            var showSplash by remember { mutableStateOf(true) }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(Unit) {
@@ -68,6 +70,9 @@ class MainActivity : ComponentActivity() {
 
             NovaStoreTheme(dynamicColor = dynamicColor, accentIndex = accentIndex) {
                 when {
+                    showSplash -> {
+                        SplashScreen(onFinished = { showSplash = false })
+                    }
                     !loaded -> {}
                     !languageSelected -> {
                         LanguageScreen(onSelected = { lang ->
