@@ -7,15 +7,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,8 +24,8 @@ import com.novastore.app.data.CatalogExtra2
 import com.novastore.app.data.UpdateChecker
 import com.novastore.app.data.categoryLabel
 import com.novastore.app.i18n.Strings
-import com.novastore.app.util.AppIcon
-import com.novastore.app.util.AppUtils
+import com.novastore.app.ui.components.AppCard
+import com.novastore.app.ui.components.GradientTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,9 +70,9 @@ fun MainScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(Strings.get(language, "app_name"), fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            GradientTopBar(
+                title = Strings.get(language, "app_name"),
+                subtitle = "Open source"
             )
         }
     ) { padding ->
@@ -143,76 +140,6 @@ fun MainScreen(
                             Text(Strings.get(language, "nothing_found"), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AppCard(app: AppInfo, language: String, onClick: () -> Unit) {
-    val context = LocalContext.current
-    val installed = remember(app.packageName) { AppUtils.isInstalled(context, app.packageName) }
-
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppIcon(app.name, app.iconUrl, 56)
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        app.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (installed) {
-                        Icon(
-                            Icons.Filled.CheckCircle,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Text(
-                    app.description(language),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (app.author.isNotBlank()) {
-                    Text(
-                        "${Strings.get(language, "author")}: ${app.author}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.Star,
-                        null,
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        if (app.rating > 0) "%.1f".format(app.rating) else "—",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        categoryLabel(language, app.category),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
             }
         }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.Crossfade
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,6 +28,8 @@ import com.novastore.app.ui.language.LanguageScreen
 import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
 import com.novastore.app.ui.network.NoInternetScreen
+import com.novastore.app.ui.components.CustomBottomNav
+import com.novastore.app.ui.components.NavItem
 import com.novastore.app.ui.settings.SettingsScreen
 import com.novastore.app.ui.splash.SplashScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
@@ -114,26 +117,26 @@ class MainActivity : ComponentActivity() {
                             Triple("downloads", "tab_downloads", Icons.Filled.Download),
                             Triple("settings", "tab_settings", Icons.Filled.Settings)
                         )
+                        val backStack by navController.currentBackStackEntryAsState()
+                        val currentRoute = backStack?.destination?.route
+
                         Scaffold(
                             bottomBar = {
-                                NavigationBar {
-                                    val backStack by navController.currentBackStackEntryAsState()
-                                    val route = backStack?.destination?.route
-                                    items.forEach { (r, labelKey, icon) ->
-                                        NavigationBarItem(
-                                            selected = route == r,
-                                            onClick = {
-                                                navController.navigate(r) {
-                                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
-                                            },
-                                            icon = { Icon(icon, null) },
-                                            label = { Text(Strings.get(language, labelKey)) }
-                                        )
+                                CustomBottomNav(
+                                    items = listOf(
+                                        NavItem("main", Strings.get(language, "tab_catalog"), Icons.Filled.Apps),
+                                        NavItem("downloads", Strings.get(language, "tab_downloads"), Icons.Filled.Download),
+                                        NavItem("settings", Strings.get(language, "tab_settings"), Icons.Filled.Settings)
+                                    ),
+                                    selectedRoute = currentRoute,
+                                    onItemClick = { r ->
+                                        navController.navigate(r) {
+                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
-                                }
+                                )
                             }
                         ) { padding ->
                             NavHost(
