@@ -1,5 +1,8 @@
 package com.novastore.app
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,12 +24,22 @@ import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.detail.DetailScreen
 import com.novastore.app.ui.downloads.DownloadsScreen
+import com.novastore.app.ui.fdroid.FdroidDetailScreen
+import com.novastore.app.ui.fdroid.FdroidScreen
 import com.novastore.app.ui.language.LanguageScreen
 import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
+import com.novastore.app.ui.network.NoInternetScreen
 import com.novastore.app.ui.settings.SettingsScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
 import kotlinx.coroutines.launch
+
+private fun isOnline(context: Context): Boolean {
+    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = cm.activeNetwork ?: return false
+    val capabilities = cm.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +55,7 @@ class MainActivity : ComponentActivity() {
             var accentIndex by remember { mutableStateOf(0) }
             var smoothAnimations by remember { mutableStateOf(true) }
             var updateNotifications by remember { mutableStateOf(true) }
+            var online by remember { mutableStateOf(isOnline(applicationContext)) }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(Unit) {
@@ -85,10 +100,16 @@ class MainActivity : ComponentActivity() {
                             }
                         })
                     }
+                    !online -> {
+                        NoInternetScreen(onRetry = {
+                            online = isOnline(applicationContext)
+                        })
+                    }
                     else -> {
                         val navController = rememberNavController()
                         val items = listOf(
                             Triple("main", "tab_catalog", Icons.Filled.Apps),
+                            Triple("fdroid", "tab_fdroid", Icons.Filled.Storefront),
                             Triple("downloads", "tab_downloads", Icons.Filled.Download),
                             Triple("settings", "tab_settings", Icons.Filled.Settings)
                         )
@@ -108,11 +129,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             },
                                             icon = { Icon(icon, null) },
-                                            label = {
-                                                val label = Strings.get(language, labelKey)
-                                                Strings.get(language, labelKey)
-                                                Text(label)
-                                            }
+                                            label = { Text(Strings.get(language, labelKey)) }
                                         )
                                     }
                                 }
@@ -128,6 +145,12 @@ class MainActivity : ComponentActivity() {
                                         language = language,
                                         updateNotifications = updateNotifications,
                                         onAppClick = { pkg -> navController.navigate("detail/$pkg") }
+                                    )
+                                }
+                                composable("fdroid") {
+                                    FdroidScreen(
+                                        language = language,
+                                        onAppClick = { pkg -> navController.navigate("fdroid_detail/$pkg") }
                                     )
                                 }
                                 composable("downloads") {
@@ -160,6 +183,14 @@ class MainActivity : ComponentActivity() {
                                 composable("detail/{pkg}") { back ->
                                     val pkg = back.arguments?.getString("pkg") ?: ""
                                     DetailScreen(
+                                        packageName = pkg,
+                                        language = language,
+                                        onBack = { navController.popBackStack() }
+                                    )
+                                }
+                                composable("fdroid_detail/{pkg}") { back ->
+                                    val pkg = back.arguments?.getString("pkg") ?: ""
+                                    FdroidDetailScreen(
                                         packageName = pkg,
                                         language = language,
                                         onBack = { navController.popBackStack() }
