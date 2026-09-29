@@ -21,6 +21,11 @@ data class FdroidApp(
     val apkUrl: String = ""
 )
 
+sealed class FdroidResult {
+    data class Success(val apps: List<FdroidApp>) : FdroidResult()
+    data class Error(val message: String) : FdroidResult()
+}
+
 object FdroidApi {
     private val client = OkHttpClient()
 
@@ -28,8 +33,8 @@ object FdroidApi {
     private const val CACHE_FILE = "fdroid_index.json"
     private const val CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000L
 
-    suspend fun loadCatalog(context: Context, forceRefresh: Boolean = false): List<FdroidApp> =
-        withContext(Dispatchers.IO) {
+    suspend fun loadCatalog(context: Context, forceRefresh: Boolean = false): FdroidResult =
+        withContext(Dispatchers.Default) {
             try {
                 val cacheFile = File(context.filesDir, CACHE_FILE)
                 val needDownload = forceRefresh ||
@@ -37,20 +42,35 @@ object FdroidApi {
                     (System.currentTimeMillis() - cacheFile.lastModified() > CACHE_MAX_AGE_MS)
 
                 val json: String = if (needDownload) {
-                    val request = Request.Builder().url(INDEX_URL).build()
-                    val response = client.newCall(request).execute()
-                    val body = response.body?.string() ?: return@withContext emptyList()
-                    cacheFile.writeText(body)
-                    body
+                    val downloaded = downloadIndex()
+                        ?: return@withContext FdroidResult.Error("no_connection")
+                    cacheFile.writeText(downloaded)
+                    downloaded
                 } else {
                     cacheFile.readText()
                 }
 
-                parseIndex(json)
+                val apps = parseIndex(json)
+                if (apps.isEmpty()) {
+                    FdroidResult.Error("empty_catalog")
+                } else {
+                    FdroidResult.Success(apps)
+                }
             } catch (e: Exception) {
-                emptyList()
+                FdroidResult.Error(e.message ?: "unknown_error")
             }
         }
+
+    private fun downloadIndex(): String? {
+        return try {
+            val request = Request.Builder().url(INDEX_URL).build()
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) return null
+            response.body?.string()
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     private fun parseIndex(json: String): List<FdroidApp> {
         val result = mutableListOf<FdroidApp>()

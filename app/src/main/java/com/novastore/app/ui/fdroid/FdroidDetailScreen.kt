@@ -18,6 +18,8 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.novastore.app.data.FdroidApi
 import com.novastore.app.data.FdroidApp
+import com.novastore.app.data.FdroidResult
+import com.novastore.app.data.FdroidResult
 import com.novastore.app.i18n.Strings
 import com.novastore.app.util.ApkInstaller
 import com.novastore.app.util.DownloadService
@@ -44,7 +46,8 @@ fun FdroidDetailScreen(
 
     LaunchedEffect(packageName) {
         needsPermission = !ApkInstaller.hasInstallPermission(context)
-        val list = FdroidApi.loadCatalog(context)
+        val result = FdroidApi.loadCatalog(context)
+        if (result is FdroidResult.Success) app = result.apps.firstOrNull { it.packageName == packageName }
         app = list.firstOrNull { it.packageName == packageName }
         loading = false
     }

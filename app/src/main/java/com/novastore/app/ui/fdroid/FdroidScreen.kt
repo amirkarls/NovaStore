@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -14,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.novastore.app.data.FdroidApi
 import com.novastore.app.data.FdroidApp
+import com.novastore.app.data.FdroidResult
 import com.novastore.app.i18n.Strings
 import kotlinx.coroutines.launch
 
@@ -34,16 +37,28 @@ fun FdroidScreen(
     var filtered by remember { mutableStateOf<List<FdroidApp>>(emptyList()) }
     var query by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    suspend fun reload(force: Boolean) {
+        loading = true
+        errorMessage = null
+        when (val result = FdroidApi.loadCatalog(context, force)) {
+            is FdroidResult.Success -> {
+                apps = result.apps
+                filtered = result.apps
+                errorMessage = null
+            }
+            is FdroidResult.Error -> {
+                apps = emptyList()
+                filtered = emptyList()
+                errorMessage = result.message
+            }
+        }
+        loading = false
+    }
 
     LaunchedEffect(Unit) {
-        loading = true
-        error = false
-        val list = FdroidApi.loadCatalog(context)
-        apps = list
-        filtered = list
-        loading = false
-        if (list.isEmpty()) error = true
+        reload(false)
     }
 
     LaunchedEffect(query) {
@@ -62,14 +77,7 @@ fun FdroidScreen(
                 title = { Text("F-Droid", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = {
-                        scope.launch {
-                            loading = true
-                            val list = FdroidApi.loadCatalog(context, forceRefresh = true)
-                            apps = list
-                            filtered = list
-                            loading = false
-                            if (list.isEmpty()) error = true
-                        }
+                        scope.launch { reload(true) }
                     }) {
                         Icon(Icons.Filled.Refresh, contentDescription = Strings.get(language, "refresh"))
                     }
@@ -102,17 +110,54 @@ fun FdroidScreen(
                             Text(
                                 "First launch may take 10-30 seconds",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
                 }
-                error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            Strings.get(language, "downloads_empty"),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                errorMessage != null -> {
+                    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Surface(
+                                shape = MaterialTheme.shapes.extraLarge,
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier.size(80.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Filled.CloudOff,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.size(44.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(24.dp))
+                            Text(
+                                "Отсутствует соединение с сервером F-Droid",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Пожалуйста, подождите. Возможно, сервер F-Droid временно недоступен, или у вас нет интернета.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(24.dp))
+                            Button(
+                                onClick = { scope.launch { reload(true) } },
+                                modifier = Modifier.fillMaxWidth().height(52.dp)
+                            ) {
+                                Text(Strings.get(language, "refresh"))
+                            }
+                        }
                     }
                 }
                 else -> {
@@ -157,10 +202,7 @@ fun FdroidCard(app: FdroidApp, onClick: () -> Unit) {
                 modifier = Modifier.size(56.dp),
                 loading = { Box(Modifier.size(56.dp)) },
                 error = {
-                    Box(
-                        modifier = Modifier.size(56.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
                         Text(
                             app.name.take(1).uppercase(),
                             style = MaterialTheme.typography.headlineSmall,
@@ -172,11 +214,7 @@ fun FdroidCard(app: FdroidApp, onClick: () -> Unit) {
             )
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text(
-                    app.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(app.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
                     app.summary,
                     style = MaterialTheme.typography.bodySmall,
@@ -191,12 +229,7 @@ fun FdroidCard(app: FdroidApp, onClick: () -> Unit) {
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.Star,
-                        null,
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(14.dp)
-                    )
+                    Icon(Icons.Filled.Star, null, tint = Color(0xFFFFC107), modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
                     Text(
                         "—",
