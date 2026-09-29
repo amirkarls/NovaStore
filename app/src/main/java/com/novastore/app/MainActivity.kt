@@ -1,8 +1,5 @@
 package com.novastore.app
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.novastore.app.data.GitHubApi
+import com.novastore.app.util.NetworkUtils
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
 import com.novastore.app.ui.detail.DetailScreen
@@ -35,12 +33,6 @@ import com.novastore.app.ui.splash.SplashScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
 import kotlinx.coroutines.launch
 
-private fun isOnline(context: Context): Boolean {
-    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val network = cm.activeNetwork ?: return false
-    val capabilities = cm.getNetworkCapabilities(network) ?: return false
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +48,7 @@ class MainActivity : ComponentActivity() {
             var accentIndex by remember { mutableStateOf(0) }
             var smoothAnimations by remember { mutableStateOf(true) }
             var updateNotifications by remember { mutableStateOf(true) }
-            var online by remember { mutableStateOf(isOnline(applicationContext)) }
+            var online by remember { mutableStateOf(NetworkUtils.isOnline(applicationContext)) }
             var showSplash by remember { mutableStateOf(true) }
             val scope = rememberCoroutineScope()
 
@@ -107,7 +99,7 @@ class MainActivity : ComponentActivity() {
                     }
                     !online -> {
                         NoInternetScreen(onRetry = {
-                            online = isOnline(applicationContext)
+                            online = NetworkUtils.isOnline(applicationContext)
                         })
                     }
                     else -> {
