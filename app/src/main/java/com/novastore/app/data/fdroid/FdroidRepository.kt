@@ -61,7 +61,7 @@ object FdroidRepository {
                 val jsonText = try {
                     extractIndexFromJar(jarBytes)
                 } catch (e: Exception) {
-                    val err = "Unzip error: ${e.message}"
+                    val err = "Unzip error: ${e.javaClass.simpleName}: ${e.message}"
                     Log.e(TAG, err, e)
                     return@withContext SyncResult.Error(err)
                 }
@@ -76,7 +76,7 @@ object FdroidRepository {
                 val apps = try {
                     FdroidParser.parseIndexV1(jsonText)
                 } catch (e: Exception) {
-                    val err = "Parse error: ${e.message}"
+                    val err = "Parse error: ${e.javaClass.simpleName}: ${e.message}"
                     Log.e(TAG, err, e)
                     return@withContext SyncResult.Error(err)
                 }
@@ -108,7 +108,7 @@ object FdroidRepository {
                     db.fdroidDao().clear()
                     db.fdroidDao().insertAll(entities)
                 } catch (e: Exception) {
-                    val err = "DB error: ${e.message}"
+                    val err = "DB error: ${e.javaClass.simpleName}: ${e.message}"
                     Log.e(TAG, err, e)
                     return@withContext SyncResult.Error(err)
                 }
@@ -116,7 +116,7 @@ object FdroidRepository {
                 onProgress(1f)
                 SyncResult.Success(entities.size)
             } catch (e: Exception) {
-                val err = "Network error: ${e.message}"
+                val err = "Network error: ${e.javaClass.simpleName}: ${e.message}"
                 Log.e(TAG, err, e)
                 SyncResult.Error(err)
             }
