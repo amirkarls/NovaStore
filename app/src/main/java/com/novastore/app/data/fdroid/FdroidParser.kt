@@ -2,7 +2,6 @@ package com.novastore.app.data.fdroid
 
 import android.util.Log
 import kotlinx.serialization.json.*
-import java.io.InputStream
 
 object FdroidParser {
     private const val TAG = "FdroidParser"
@@ -13,80 +12,82 @@ object FdroidParser {
         coerceInputValues = true
     }
 
+    /**
+     * Универсальный парсер index-v1.json.
+     * Поддерживает и старый формат (apps/packages = JsonObject),
+     * и новый (apps/packages = JsonArray).
+     */
     fun parseIndexV1(text: String): List<FdroidAppData> {
         val root = json.parseToJsonElement(text).jsonObject
 
-        val appsElement = root["apps"]
-        if (appsElement !is JsonObject) {
-            Log.e(TAG, "apps is not JsonObject! Type: ${appsElement?.javaClass?.simpleName}")
-            throw IllegalArgumentException("apps is not a JsonObject, it's ${appsElement?.javaClass?.simpleName}")
-        }
-        val appsObj = appsElement.jsonObject
+        // === APPS ===
+        val appsMap: Map<String, JsonObject> = when (val appsElement = root["apps"]) {
+            is JsonObject -> appsElement.mapValues { it.value.jsonObject }
 
-        val packagesElement = root["packages"]
-        if (packagesElement !is JsonObject) {
-            Log.e(TAG, "packages is not JsonObject! Type: ${packagesElement?.javaClass?.simpleName}")
-            throw IllegalArgumentException("packages is not a JsonObject, it's ${packagesElement?.javaClass?.simpleName}")
-        }
-        val packagesObj = packagesElement.jsonObject
+            is JsonArray -> appsElement.mapNotNull { el ->
+                val obj = el.jsonObjectOrNull() ?: return@mapNotNull null
+                val pkg = obj["packageName"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                pkg to obj
+            }.toMap()
 
-        val versionsMap = mutableMapOf<String, Triple<String, Long, String>>()
-
-        for ((pkgName, versionsElement) in packagesObj) {
-            try {
-                if (versionsElement !is JsonArray) {
-                    Log.w(TAG, "packages[$pkgName] is not JsonArray, skipping. Type: ${versionsElement.javaClass.simpleName}")
-                    continue
-                }
-                for (vElement in versionsElement) {
-                    if (vElement !is JsonObject) continue
-                    val v = vElement.jsonObject
-                    val versionName = v["versionName"]?.jsonPrimitive?.content ?: ""
-                    val versionCode = v["versionCode"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
-                    val apkName = v["apkName"]?.jsonPrimitive?.content ?: ""
-
-                    val current = versionsMap[pkgName]
-                    if (current == null || versionCode > current.second) {
-                        versionsMap[pkgName] = Triple(versionName, versionCode, apkName)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing packages[$pkgName]: ${e.message}")
+            else -> {
+                Log.e(TAG, "apps is neither object nor array: ${appsElement?.javaClass?.simpleName}")
+                throw IllegalArgumentException("apps is not object/array, it's ${appsElement?.javaClass?.simpleName}")
             }
         }
 
+        // === PACKAGES ===
+        // Каждый элемент packages: либо {versions: [...]}, либо [...]
+        val versionsMap = mutableMapOf<String, Triple<String, Long, String>>()
+
+        when (val packagesElement = root["packages"]) {
+            is JsonObject -> {
+                for ((pkgName, versionsElement) in packagesElement) {
+                    parseVersions(pkgName, versionsElement, versionsMap)
+                }
+            }
+
+            is JsonArray -> {
+                for (el in packagesElement) {
+                    val obj = el.jsonObjectOrNull() ?: continue
+                    val pkg = obj["packageName"]?.jsonPrimitive?.contentOrNull ?: continue
+                    val versions = obj["versions"] ?: obj["version"] ?: continue
+                    parseVersions(pkg, versions, versionsMap)
+                }
+            }
+
+            else -> {
+                Log.w(TAG, "packages is neither object nor array, skipping versions: ${packagesElement?.javaClass?.simpleName}")
+            }
+        }
+
+        // === Собираем результат ===
         val result = mutableListOf<FdroidAppData>()
 
-        for ((pkgName, appElement) in appsObj) {
+        for ((pkgName, appObj) in appsMap) {
             try {
-                if (appElement !is JsonObject) {
-                    Log.w(TAG, "apps[$pkgName] is not JsonObject, skipping. Type: ${appElement.javaClass.simpleName}")
-                    continue
-                }
-                val appObj = appElement.jsonObject
+                val localized = appObj["localized"]?.jsonObjectOrNull()
+                val enUS = localized?.get("en-US")?.jsonObjectOrNull()
+                val ruRU = localized?.get("ru")?.jsonObjectOrNull()
 
-                val localized = appObj["localized"]?.jsonObject
-                val enUS = localized?.get("en-US")?.jsonObject
-                val ruRU = localized?.get("ru")?.jsonObject
-
-                val name = ruRU?.get("name")?.jsonPrimitive?.content
-                    ?: enUS?.get("name")?.jsonPrimitive?.content
+                val name = ruRU?.get("name")?.jsonPrimitive?.contentOrNull
+                    ?: enUS?.get("name")?.jsonPrimitive?.contentOrNull
                     ?: pkgName
-                val summary = ruRU?.get("summary")?.jsonPrimitive?.content
-                    ?: enUS?.get("summary")?.jsonPrimitive?.content
+                val summary = ruRU?.get("summary")?.jsonPrimitive?.contentOrNull
+                    ?: enUS?.get("summary")?.jsonPrimitive?.contentOrNull
                     ?: ""
-                val description = ruRU?.get("description")?.jsonPrimitive?.content
-                    ?: enUS?.get("description")?.jsonPrimitive?.content
+                val description = ruRU?.get("description")?.jsonPrimitive?.contentOrNull
+                    ?: enUS?.get("description")?.jsonPrimitive?.contentOrNull
                     ?: ""
 
-                val author = appObj["authorName"]?.jsonPrimitive?.content
-                    ?: appObj["author"]?.jsonPrimitive?.content ?: ""
-                val icon = appObj["icon"]?.jsonPrimitive?.content ?: "icon.png"
+                val author = appObj["authorName"]?.jsonPrimitive?.contentOrNull
+                    ?: appObj["author"]?.jsonPrimitive?.contentOrNull ?: ""
+                val icon = appObj["icon"]?.jsonPrimitive?.contentOrNull ?: "icon.png"
 
                 val category = try {
                     val cats = appObj["categories"]
                     if (cats is JsonArray && cats.isNotEmpty())
-                        cats[0].jsonPrimitive.content
+                        cats[0].jsonPrimitive.contentOrNull ?: "Other"
                     else "Other"
                 } catch (e: Exception) { "Other" }
 
@@ -120,10 +121,52 @@ object FdroidParser {
             }
         }
 
+        Log.d(TAG, "Parsed ${result.size} apps from ${appsMap.size} entries")
         return result.sortedBy { it.name.lowercase() }
     }
 
+    /**
+     * Разбор массива версий (или объекта версий) для одного пакета.
+     * Записывает в versionsMap самую свежую версию (по versionCode).
+     */
+    private fun parseVersions(
+        pkgName: String,
+        versionsElement: JsonElement,
+        versionsMap: MutableMap<String, Triple<String, Long, String>>
+    ) {
+        val versions: List<JsonObject> = when (versionsElement) {
+            is JsonArray -> versionsElement.mapNotNull { it.jsonObjectOrNull() }
+            is JsonObject -> listOf(versionsElement)
+            else -> return
+        }
+
+        for (v in versions) {
+            try {
+                val versionName = v["versionName"]?.jsonPrimitive?.contentOrNull ?: ""
+                val versionCode = v["versionCode"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
+                val apkName = v["apkName"]?.jsonPrimitive?.contentOrNull ?: ""
+
+                val current = versionsMap[pkgName]
+                if (current == null || versionCode > current.second) {
+                    versionsMap[pkgName] = Triple(versionName, versionCode, apkName)
+                }
+            } catch (e: Exception) {
+                // пропускаем битую версию
+            }
+        }
+    }
+
     fun parseIndex(text: String): List<FdroidAppData> = parseIndexV1(text)
+
+    // === Хелперы ===
+    private fun JsonElement.jsonObjectOrNull(): JsonObject? =
+        this as? JsonObject
+
+    private fun JsonElement?.contentOrNull(): String? =
+        (this as? JsonPrimitive)?.contentOrNull
+
+    private val JsonPrimitive.contentOrNull: String?
+        get() = if (this is JsonNull) null else content
 }
 
 data class FdroidAppData(
