@@ -8,31 +8,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
-import androidx.compose.animation.Crossfade
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.novastore.app.data.GitHubApi
-import com.novastore.app.util.NetworkUtils
 import com.novastore.app.data.Preferences
 import com.novastore.app.i18n.Strings
+import com.novastore.app.ui.components.CustomBottomNav
+import com.novastore.app.ui.components.NavItem
 import com.novastore.app.ui.detail.DetailScreen
 import com.novastore.app.ui.downloads.DownloadsScreen
+import com.novastore.app.ui.fdroid.FdroidDetailScreen
+import com.novastore.app.ui.fdroid.FdroidScreen
 import com.novastore.app.ui.language.LanguageScreen
 import com.novastore.app.ui.language.WarningScreen
 import com.novastore.app.ui.main.MainScreen
 import com.novastore.app.ui.network.NoInternetScreen
-import com.novastore.app.ui.components.CustomBottomNav
-import com.novastore.app.ui.components.NavItem
 import com.novastore.app.ui.settings.SettingsScreen
 import com.novastore.app.ui.splash.SplashScreen
 import com.novastore.app.ui.theme.NovaStoreTheme
+import com.novastore.app.util.NetworkUtils
 import kotlinx.coroutines.launch
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,11 +105,6 @@ class MainActivity : ComponentActivity() {
                     }
                     else -> {
                         val navController = rememberNavController()
-                        val items = listOf(
-                            Triple("main", "tab_catalog", Icons.Filled.Apps),
-                            Triple("downloads", "tab_downloads", Icons.Filled.Download),
-                            Triple("settings", "tab_settings", Icons.Filled.Settings)
-                        )
                         val backStack by navController.currentBackStackEntryAsState()
                         val currentRoute = backStack?.destination?.route
 
@@ -117,6 +113,7 @@ class MainActivity : ComponentActivity() {
                                 CustomBottomNav(
                                     items = listOf(
                                         NavItem("main", Strings.get(language, "tab_catalog"), Icons.Filled.Apps),
+                                        NavItem("fdroid", Strings.get(language, "tab_fdroid"), Icons.Filled.Storefront),
                                         NavItem("downloads", Strings.get(language, "tab_downloads"), Icons.Filled.Download),
                                         NavItem("settings", Strings.get(language, "tab_settings"), Icons.Filled.Settings)
                                     ),
@@ -141,6 +138,12 @@ class MainActivity : ComponentActivity() {
                                         language = language,
                                         updateNotifications = updateNotifications,
                                         onAppClick = { pkg -> navController.navigate("detail/$pkg") }
+                                    )
+                                }
+                                composable("fdroid") {
+                                    FdroidScreen(
+                                        language = language,
+                                        onAppClick = { pkg -> navController.navigate("fdroid_detail/$pkg") }
                                     )
                                 }
                                 composable("downloads") {
@@ -173,6 +176,14 @@ class MainActivity : ComponentActivity() {
                                 composable("detail/{pkg}") { back ->
                                     val pkg = back.arguments?.getString("pkg") ?: ""
                                     DetailScreen(
+                                        packageName = pkg,
+                                        language = language,
+                                        onBack = { navController.popBackStack() }
+                                    )
+                                }
+                                composable("fdroid_detail/{pkg}") { back ->
+                                    val pkg = back.arguments?.getString("pkg") ?: ""
+                                    FdroidDetailScreen(
                                         packageName = pkg,
                                         language = language,
                                         onBack = { navController.popBackStack() }
