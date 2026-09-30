@@ -179,14 +179,14 @@ fun FdroidScreen(
                             }
                             Spacer(Modifier.height(24.dp))
                             Text(
-                                "Отсутствует соединение с сервером F-Droid",
+                                (errorMessage ?: "F-Droid error"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                "Пожалуйста, подождите. Возможно, сервер F-Droid временно недоступен.",
+                                "Tap Retry to try again",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
