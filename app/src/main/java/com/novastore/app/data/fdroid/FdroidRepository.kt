@@ -1,36 +1,77 @@
 package com.novastore.app.data.fdroid
 
 import android.content.Context
+import android.util.Log
 import com.novastore.app.data.fdroid.db.FdroidDatabase
 import com.novastore.app.data.fdroid.db.FdroidEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.TimeUnit
 
 object FdroidRepository {
-    private val client = OkHttpClient()
+    private const val TAG = "FdroidSync"
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(180, TimeUnit.SECONDS)
+        .build()
+
     private const val INDEX_URL = "https://f-droid.org/repo/index-v2.json"
 
-    suspend fun sync(context: Context, onProgress: (Float) -> Unit = {}): Int =
+    suspend fun sync(context: Context, onProgress: (Float) -> Unit = {}): SyncResult =
         withContext(Dispatchers.IO) {
             try {
-                onProgress(0.1f)
+                onProgress(0.05f)
 
                 val request = Request.Builder().url(INDEX_URL).build()
                 val response = client.newCall(request).execute()
-                if (!response.isSuccessful) return@withContext -1
+                if (!response.isSuccessful) {
+                    val err = "HTTP ${response.code}: ${response.message}"
+                    Log.e(TAG, err)
+                    return@withContext SyncResult.Error(err)
+                }
 
-                val body = response.body ?: return@withContext -1
-                val contentLength = body.contentLength()
-                val bytes = body.bytes()
+                val body = response.body ?: return@withContext SyncResult.Error("Empty body")
+                val total = body.contentLength()
+                Log.d(TAG, "Total size: $total bytes")
 
+                val input = body.byteStream()
+                val output = ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var read: Int
+                var totalRead = 0L
+
+                while (input.read(buffer).also { read = it } != -1) {
+                    output.write(buffer, 0, read)
+                    totalRead += read
+                    if (total > 0) {
+                        val downloadProgress = totalRead.toFloat() / total.toFloat()
+                        onProgress(0.05f + downloadProgress * 0.45f)
+                    }
+                }
+
+                Log.d(TAG, "Downloaded $totalRead bytes")
                 onProgress(0.5f)
 
-                val text = String(bytes, Charsets.UTF_8)
-                val apps = FdroidParser.parseIndex(text)
+                val text = output.toString("UTF-8")
+                Log.d(TAG, "Text length: ${text.length}")
 
+                val apps = try {
+                    FdroidParser.parseIndex(text)
+                } catch (e: Exception) {
+                    val err = "Parse error: ${e.message}"
+                    Log.e(TAG, err, e)
+                    return@withContext SyncResult.Error(err)
+                }
+
+                Log.d(TAG, "Parsed apps: ${apps.size}")
                 onProgress(0.8f)
+
+                if (apps.isEmpty()) {
+                    return@withContext SyncResult.Error("Parsed 0 apps")
+                }
 
                 val entities = apps.map {
                     FdroidEntity(
@@ -47,14 +88,22 @@ object FdroidRepository {
                     )
                 }
 
-                val db = FdroidDatabase.get(context)
-                db.fdroidDao().clear()
-                db.fdroidDao().insertAll(entities)
+                try {
+                    val db = FdroidDatabase.get(context)
+                    db.fdroidDao().clear()
+                    db.fdroidDao().insertAll(entities)
+                } catch (e: Exception) {
+                    val err = "DB error: ${e.message}"
+                    Log.e(TAG, err, e)
+                    return@withContext SyncResult.Error(err)
+                }
 
                 onProgress(1f)
-                entities.size
+                SyncResult.Success(entities.size)
             } catch (e: Exception) {
-                -1
+                val err = "Network error: ${e.message}"
+                Log.e(TAG, err, e)
+                SyncResult.Error(err)
             }
         }
 
@@ -82,4 +131,9 @@ object FdroidRepository {
         withContext(Dispatchers.IO) {
             FdroidDatabase.get(context).fdroidDao().getByPackage(pkg)
         }
+}
+
+sealed class SyncResult {
+    data class Success(val count: Int) : SyncResult()
+    data class Error(val message: String) : SyncResult()
 }

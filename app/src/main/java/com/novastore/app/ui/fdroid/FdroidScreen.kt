@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.novastore.app.data.fdroid.FdroidRepository
+import com.novastore.app.data.fdroid.SyncResult
 import com.novastore.app.data.fdroid.db.FdroidEntity
 import com.novastore.app.i18n.Strings
 import kotlinx.coroutines.launch
@@ -51,12 +52,14 @@ fun FdroidScreen(
             progress = 0f
             val result = FdroidRepository.sync(context) { p -> progress = p }
             syncing = false
-            if (result <= 0) {
-                errorMessage = "no_connection"
-                loading = false
-                return
+            when (result) {
+                is SyncResult.Success -> totalCount = result.count
+                is SyncResult.Error -> {
+                    errorMessage = result.message
+                    loading = false
+                    return
+                }
             }
-            totalCount = result
         } else {
             totalCount = count
         }
@@ -107,9 +110,13 @@ fun FdroidScreen(
                         scope.launch {
                             syncing = true
                             progress = 0f
-                            FdroidRepository.sync(context) { p -> progress = p }
+                            val result = FdroidRepository.sync(context) { p -> progress = p }
                             syncing = false
-                            loadInitial()
+                            if (result is SyncResult.Success) {
+                                loadInitial()
+                            } else if (result is SyncResult.Error) {
+                                errorMessage = result.message
+                            }
                         }
                     }, enabled = !syncing) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
