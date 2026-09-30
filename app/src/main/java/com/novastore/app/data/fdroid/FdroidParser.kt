@@ -1,13 +1,11 @@
 package com.novastore.app.data.fdroid
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import android.util.Log
+import kotlinx.serialization.json.*
+import java.io.InputStream
 
 object FdroidParser {
+    private const val TAG = "FdroidParser"
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -18,16 +16,30 @@ object FdroidParser {
     fun parseIndexV1(text: String): List<FdroidAppData> {
         val root = json.parseToJsonElement(text).jsonObject
 
-        val appsObj = root["apps"]?.jsonObject ?: return emptyList()
-        val packagesObj = root["packages"]?.jsonObject ?: return emptyList()
+        val appsElement = root["apps"]
+        if (appsElement !is JsonObject) {
+            Log.e(TAG, "apps is not JsonObject! Type: ${appsElement?.javaClass?.simpleName}")
+            throw IllegalArgumentException("apps is not a JsonObject, it's ${appsElement?.javaClass?.simpleName}")
+        }
+        val appsObj = appsElement.jsonObject
 
-        // Собираем версии: packageName -> Triple(versionName, versionCode, apkName)
+        val packagesElement = root["packages"]
+        if (packagesElement !is JsonObject) {
+            Log.e(TAG, "packages is not JsonObject! Type: ${packagesElement?.javaClass?.simpleName}")
+            throw IllegalArgumentException("packages is not a JsonObject, it's ${packagesElement?.javaClass?.simpleName}")
+        }
+        val packagesObj = packagesElement.jsonObject
+
         val versionsMap = mutableMapOf<String, Triple<String, Long, String>>()
 
         for ((pkgName, versionsElement) in packagesObj) {
             try {
-                val arr = versionsElement as? JsonArray ?: continue
-                for (vElement in arr) {
+                if (versionsElement !is JsonArray) {
+                    Log.w(TAG, "packages[$pkgName] is not JsonArray, skipping. Type: ${versionsElement.javaClass.simpleName}")
+                    continue
+                }
+                for (vElement in versionsElement) {
+                    if (vElement !is JsonObject) continue
                     val v = vElement.jsonObject
                     val versionName = v["versionName"]?.jsonPrimitive?.content ?: ""
                     val versionCode = v["versionCode"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
@@ -39,6 +51,7 @@ object FdroidParser {
                     }
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error parsing packages[$pkgName]: ${e.message}")
             }
         }
 
@@ -46,12 +59,13 @@ object FdroidParser {
 
         for ((pkgName, appElement) in appsObj) {
             try {
+                if (appElement !is JsonObject) {
+                    Log.w(TAG, "apps[$pkgName] is not JsonObject, skipping. Type: ${appElement.javaClass.simpleName}")
+                    continue
+                }
                 val appObj = appElement.jsonObject
 
-                // localized — объект с ключами "en-US", "ru", ...
                 val localized = appObj["localized"]?.jsonObject
-
-                // Берём английский или русский
                 val enUS = localized?.get("en-US")?.jsonObject
                 val ruRU = localized?.get("ru")?.jsonObject
 
@@ -102,6 +116,7 @@ object FdroidParser {
                     )
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error parsing apps[$pkgName]: ${e.message}")
             }
         }
 
