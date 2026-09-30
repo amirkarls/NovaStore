@@ -1,10 +1,11 @@
 package com.novastore.app.data.fdroid
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
 
 object FdroidParser {
 
@@ -17,18 +18,17 @@ object FdroidParser {
     fun parseIndexV1(text: String): List<FdroidAppData> {
         val root = json.parseToJsonElement(text).jsonObject
 
-        // "apps" и "packages" — это ОБЪЕКТЫ (Map), а не массивы!
         val appsObj = root["apps"]?.jsonObject ?: return emptyList()
         val packagesObj = root["packages"]?.jsonObject ?: return emptyList()
 
-        // Собираем версии: packageName -> (versionName, versionCode, apkName)
+        // Собираем версии: packageName -> Triple(versionName, versionCode, apkName)
         val versionsMap = mutableMapOf<String, Triple<String, Long, String>>()
 
-        for ((pkgName, pkgElement) in packagesObj) {
+        for ((pkgName, versionsElement) in packagesObj) {
             try {
-                val pkgArr = pkgElement as? kotlinx.serialization.json.JsonArray ?: continue
-                for (verElement in pkgArr) {
-                    val v = verElement.jsonObject
+                val arr = versionsElement as? JsonArray ?: continue
+                for (vElement in arr) {
+                    val v = vElement.jsonObject
                     val versionName = v["versionName"]?.jsonPrimitive?.content ?: ""
                     val versionCode = v["versionCode"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
                     val apkName = v["apkName"]?.jsonPrimitive?.content ?: ""
@@ -46,17 +46,32 @@ object FdroidParser {
 
         for ((pkgName, appElement) in appsObj) {
             try {
-                val obj = appElement.jsonObject
-                val name = obj["name"]?.jsonPrimitive?.content ?: pkgName
-                val summary = obj["summary"]?.jsonPrimitive?.content ?: ""
-                val description = obj["description"]?.jsonPrimitive?.content ?: ""
-                val author = obj["authorName"]?.jsonPrimitive?.content
-                    ?: obj["author"]?.jsonPrimitive?.content ?: ""
-                val icon = obj["icon"]?.jsonPrimitive?.content ?: "icon.png"
+                val appObj = appElement.jsonObject
+
+                // localized — объект с ключами "en-US", "ru", ...
+                val localized = appObj["localized"]?.jsonObject
+
+                // Берём английский или русский
+                val enUS = localized?.get("en-US")?.jsonObject
+                val ruRU = localized?.get("ru")?.jsonObject
+
+                val name = ruRU?.get("name")?.jsonPrimitive?.content
+                    ?: enUS?.get("name")?.jsonPrimitive?.content
+                    ?: pkgName
+                val summary = ruRU?.get("summary")?.jsonPrimitive?.content
+                    ?: enUS?.get("summary")?.jsonPrimitive?.content
+                    ?: ""
+                val description = ruRU?.get("description")?.jsonPrimitive?.content
+                    ?: enUS?.get("description")?.jsonPrimitive?.content
+                    ?: ""
+
+                val author = appObj["authorName"]?.jsonPrimitive?.content
+                    ?: appObj["author"]?.jsonPrimitive?.content ?: ""
+                val icon = appObj["icon"]?.jsonPrimitive?.content ?: "icon.png"
 
                 val category = try {
-                    val cats = obj["categories"]
-                    if (cats is kotlinx.serialization.json.JsonArray && cats.isNotEmpty())
+                    val cats = appObj["categories"]
+                    if (cats is JsonArray && cats.isNotEmpty())
                         cats[0].jsonPrimitive.content
                     else "Other"
                 } catch (e: Exception) { "Other" }
@@ -93,9 +108,7 @@ object FdroidParser {
         return result.sortedBy { it.name.lowercase() }
     }
 
-    fun parseIndex(text: String): List<FdroidAppData> {
-        return parseIndexV1(text)
-    }
+    fun parseIndex(text: String): List<FdroidAppData> = parseIndexV1(text)
 }
 
 data class FdroidAppData(
